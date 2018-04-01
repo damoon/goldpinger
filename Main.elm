@@ -1,6 +1,9 @@
 -- Read more about this program in the official Elm guide:
 -- https://guide.elm-lang.org/architecture/effects/http.html
 
+
+module Main exposing (..)
+
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -9,15 +12,14 @@ import Json.Decode as Decode
 import Time exposing (Time, second)
 
 
-
-main: Program Never Model Msg
+main : Program Never Model Msg
 main =
-  Html.program
-    { init = init "Kamehameha"
-    , view = view
-    , update = update
-    , subscriptions = subscriptions
-    }
+    Html.program
+        { init = init "Kamehameha"
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        }
 
 
 
@@ -25,16 +27,16 @@ main =
 
 
 type alias Model =
-  { topic : String
-  , gifUrl : String
-  }
+    { topic : String
+    , gifUrl : String
+    }
 
 
-init : String -> (Model, Cmd Msg)
+init : String -> ( Model, Cmd Msg )
 init topic =
-  ( Model topic "waiting.jpg"
-  , getRandomGif topic
-  )
+    ( Model topic "waiting.jpg"
+    , getRandomGif topic
+    )
 
 
 
@@ -42,25 +44,25 @@ init topic =
 
 
 type Msg
-  = MorePlease
-  | NewGif (Result Http.Error String)
-  | Tick Time
+    = MorePlease
+    | NewGif (Result Http.Error String)
+    | Tick Time
 
-update : Msg -> Model -> (Model, Cmd Msg)
+
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-  case msg of
-    Tick newTime ->
-      ({model | gifUrl = "waiting.jpg"}, getRandomGif model.topic)
+    case msg of
+        Tick newTime ->
+            ( model, getRandomGif model.topic )
 
-    MorePlease ->
-      ({model | gifUrl = "waiting.jpg"}, getRandomGif model.topic)
+        MorePlease ->
+            ( model, getRandomGif model.topic )
 
-    NewGif (Ok newUrl) ->
-      (Model model.topic newUrl, Cmd.none)
+        NewGif (Ok newUrl) ->
+            ( Model model.topic newUrl, Cmd.none )
 
-    NewGif (Err _) ->
-      (model, Cmd.none)
-
+        NewGif (Err _) ->
+            ( model, Cmd.none )
 
 
 
@@ -69,12 +71,12 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-  div []
-    [ h2 [] [text model.topic]
-    , button [ onClick MorePlease ] [ text "More Please!" ]
-    , br [] []
-    , img [src model.gifUrl] []
-    ]
+    div []
+        [ h2 [] [ text model.topic ]
+        , button [ onClick MorePlease ] [ text "More Please!" ]
+        , br [] []
+        , img [ src model.gifUrl ] []
+        ]
 
 
 
@@ -83,7 +85,7 @@ view model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Time.every (6 * second) Tick
+    Time.every (5 * second) Tick
 
 
 
@@ -92,14 +94,13 @@ subscriptions model =
 
 getRandomGif : String -> Cmd Msg
 getRandomGif topic =
-  let
-    url =
-      "https://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag=" ++ topic
---      "/abc.json?ds"
-  in
-    Http.send NewGif (Http.get url decodeGifUrl)
+    let
+        url =
+            "https://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag=" ++ topic
+    in
+        Http.send NewGif (Http.get url decodeGifUrl)
 
 
 decodeGifUrl : Decode.Decoder String
 decodeGifUrl =
-  Decode.at ["data", "image_url"] Decode.string
+    Decode.at [ "data", "image_url" ] Decode.string
