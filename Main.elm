@@ -8,99 +8,139 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
-import Json.Decode as Decode
+import Json.Decode
 import Time exposing (Time, second)
+import Debug exposing (log)
 
 
 main : Program Never Model Msg
 main =
     Html.program
-        { init = init "Kamehameha"
+        { init = init
         , view = view
         , update = update
         , subscriptions = subscriptions
         }
 
 
-
--- MODEL
-
-
-type alias Model =
-    { topic : String
-    , gifUrl : String
-    }
-
-
-init : String -> ( Model, Cmd Msg )
-init topic =
-    ( Model topic "waiting.jpg"
-    , getRandomGif topic
+init : ( Model, Cmd Msg )
+init =
+    ( { hosts = [], error = "" }
+    , fetchResults
     )
 
 
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Time.every (1 * second) Tick
 
--- UPDATE
+
+type alias Model =
+    { hosts : List Host
+    , error : String
+    }
+
+
+type alias Host =
+    { source : String
+    , pings : List Ping
+    }
+
+
+type alias Ping =
+    { target : String
+    , delay : Int
+    , timestamp : Int
+    }
 
 
 type Msg
-    = MorePlease
-    | NewGif (Result Http.Error String)
-    | Tick Time
+    = Tick Time
+    | NewResults (Result Http.Error (List Host))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick newTime ->
-            ( model, getRandomGif model.topic )
+            ( model, fetchResults )
 
-        MorePlease ->
-            ( model, getRandomGif model.topic )
+        NewResults (Ok newResults) ->
+            ( { model | hosts = newResults, error = "" }, Cmd.none )
 
-        NewGif (Ok newUrl) ->
-            ( Model model.topic newUrl, Cmd.none )
-
-        NewGif (Err _) ->
-            ( model, Cmd.none )
-
-
-
--- VIEW
+        NewResults (Err error) ->
+            ( { model | error = toString error }, Cmd.none )
 
 
 view : Model -> Html Msg
 view model =
     div []
-        [ h2 [] [ text model.topic ]
-        , button [ onClick MorePlease ] [ text "More Please!" ]
+        [ printError model.error, viewTable model.hosts ]
+
+
+printError : String -> Html Msg
+printError error =
+    if error == "" then
+        text ""
+    else
+        div [ Html.Attributes.class "error" ] [ text error ]
+
+
+viewTable : List Host -> Html Msg
+viewTable hosts =
+    Html.table []
+        (List.map
+            viewRow
+            hosts
+        )
+
+
+viewRow : Host -> Html Msg
+viewRow host =
+    Html.tr []
+        (List.concat
+            [ [ Html.td [] [ Html.text host.source ] ]
+            , (List.map
+                viewPing
+                host.pings
+              )
+            ]
+        )
+
+
+viewPing : Ping -> Html Msg
+viewPing ping =
+    Html.td []
+        [ text "target"
+        , text ping.target
         , br [] []
-        , img [ src model.gifUrl ] []
+        , text "delay"
+        , text (toString ping.delay)
+        , br [] []
+        , text "timestamp"
+        , text (toString ping.timestamp)
         ]
 
 
-
--- SUBSCRIPTIONS
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Time.every (5 * second) Tick
-
-
-
--- HTTP
-
-
-getRandomGif : String -> Cmd Msg
-getRandomGif topic =
+fetchResults : Cmd Msg
+fetchResults =
     let
         url =
-            "https://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag=" ++ topic
+            "http://localhost:8080/"
     in
-        Http.send NewGif (Http.get url decodeGifUrl)
+        Http.send NewResults (Http.get url (Json.Decode.list decodeHost))
 
 
-decodeGifUrl : Decode.Decoder String
-decodeGifUrl =
-    Decode.at [ "data", "image_url" ] Decode.string
+decodeHost : Json.Decode.Decoder Host
+decodeHost =
+    Json.Decode.map2 Host
+        (Json.Decode.field "source" Json.Decode.string)
+        (Json.Decode.field "pings" (Json.Decode.list decodePing))
+
+
+decodePing : Json.Decode.Decoder Ping
+decodePing =
+    Json.Decode.map3 Ping
+        (Json.Decode.field "target" Json.Decode.string)
+        (Json.Decode.field "delay" Json.Decode.int)
+        (Json.Decode.field "timestamp" Json.Decode.int)
