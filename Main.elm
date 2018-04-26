@@ -6,11 +6,9 @@ module Main exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (..)
 import Http
 import Json.Decode
 import Time exposing (Time, second)
-import Debug exposing (log)
 
 
 main : Program Never Model Msg
@@ -74,11 +72,18 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div [ Html.Attributes.class "goldpinger" ]
-        [ printError model.error
+    div [ class "goldpinger" ]
+        [ css "https://necolas.github.io/normalize.css/8.0.0/normalize.css"
+        , css "styles.css"
+        , printError model.error
         , Html.h1 [] [ text "Goldpinger" ]
         , viewTable model.hosts
         ]
+
+
+css : String -> Html Msg
+css path =
+    node "link" [ rel "stylesheet", href path ] []
 
 
 printError : String -> Html Msg
@@ -86,15 +91,21 @@ printError error =
     if error == "" then
         text ""
     else
-        div [ Html.Attributes.class "error" ] [ text error ]
+        div [ class "error" ] [ text error ]
 
 
 viewTable : List Host -> Html Msg
 viewTable hosts =
-    Html.table []
-        (List.map
-            viewRow
-            hosts
+    Html.table [] (List.concat [ [ viewHosts hosts ], List.map viewRow hosts ])
+
+
+viewHosts : List Host -> Html Msg
+viewHosts hosts =
+    Html.tr []
+        (List.concat
+            [ [ Html.td [] [] ]
+            , List.map (\h -> Html.td [] [ div [ class "to" ] [ text "to ", text h.source ] ]) hosts
+            ]
         )
 
 
@@ -102,7 +113,7 @@ viewRow : Host -> Html Msg
 viewRow host =
     Html.tr []
         (List.concat
-            [ [ Html.td [] [ Html.text host.source ] ]
+            [ [ Html.td [] [ text "from ", text host.source ] ]
             , List.map (viewPing host.source) host.pings
             ]
         )
@@ -111,18 +122,19 @@ viewRow host =
 viewPing : String -> Ping -> Html Msg
 viewPing source ping =
     if ping.target == source then
-        Html.td [ Html.Attributes.class "local-machine" ] [ text "local" ]
+        Html.td [ Html.Attributes.class "local-machine" ] [ text "-" ]
     else
-        Html.td []
-            [ text "target: "
-            , text ping.target
-            , br [] []
-            , text "delay: "
-            , text (toString ping.delay)
-            , br [] []
-            , text "timestamp: "
-            , text (toString ping.timestamp)
-            ]
+        printColored ping.delay
+
+
+printColored : Int -> Html Msg
+printColored delay =
+    if delay > 50 then
+        Html.td [ class "high ping" ] [ text (toString delay) ]
+    else if delay > 25 then
+        Html.td [ class "med ping" ] [ text (toString delay) ]
+    else
+        Html.td [ class "low ping" ] [ text (toString delay) ]
 
 
 fetchResults : Cmd Msg

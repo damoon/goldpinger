@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"time"
 )
@@ -32,37 +33,37 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		host{
 			Source: "host1",
 			Pings: []ping{
-				ping{Target: "host1", Delay: 1, Timestamp: time.Now().Unix()},
-				ping{Target: "host2", Delay: 1, Timestamp: time.Now().Unix()},
-				ping{Target: "host3", Delay: 1, Timestamp: time.Now().Unix()},
-				ping{Target: "host4", Delay: 1, Timestamp: time.Now().Unix()},
+				ping{Target: "host1", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
+				ping{Target: "host2", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
+				ping{Target: "host3", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
+				ping{Target: "host4", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
 			},
 		},
 		host{
 			Source: "host2",
 			Pings: []ping{
-				ping{Target: "host1", Delay: 1, Timestamp: time.Now().Unix()},
-				ping{Target: "host2", Delay: 1, Timestamp: time.Now().Unix()},
-				ping{Target: "host3", Delay: 1, Timestamp: time.Now().Unix()},
-				ping{Target: "host4", Delay: 1, Timestamp: time.Now().Unix()},
+				ping{Target: "host1", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
+				ping{Target: "host2", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
+				ping{Target: "host3", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
+				ping{Target: "host4", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
 			},
 		},
 		host{
 			Source: "host3",
 			Pings: []ping{
-				ping{Target: "host1", Delay: 1, Timestamp: time.Now().Unix()},
-				ping{Target: "host2", Delay: 1, Timestamp: time.Now().Unix()},
-				ping{Target: "host3", Delay: 1, Timestamp: time.Now().Unix()},
-				ping{Target: "host4", Delay: 1, Timestamp: time.Now().Unix()},
+				ping{Target: "host1", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
+				ping{Target: "host2", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
+				ping{Target: "host3", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
+				ping{Target: "host4", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
 			},
 		},
 		host{
 			Source: "host4",
 			Pings: []ping{
-				ping{Target: "host1", Delay: 1, Timestamp: time.Now().Unix()},
-				ping{Target: "host2", Delay: 1, Timestamp: time.Now().Unix()},
-				ping{Target: "host3", Delay: 1, Timestamp: time.Now().Unix()},
-				ping{Target: "host4", Delay: 1, Timestamp: time.Now().Unix()},
+				ping{Target: "host1", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
+				ping{Target: "host2", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
+				ping{Target: "host3", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
+				ping{Target: "host4", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
 			},
 		},
 	}

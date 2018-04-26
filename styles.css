@@ -1,0 +1,41 @@
+body {
+    background-color: #555;
+	font-family: Verdana, Geneva, sans-serif;
+    color: #FFF;
+}
+.local-machine {
+    color: #888;
+    text-align: center;
+}
+h1 {
+	font-size: 24px;
+	font-style: normal;
+	font-variant: normal;
+	font-weight: 500;
+    line-height: 26.4px;
+    color: #D4AF37;
+}
+.to {
+    writing-mode: vertical-lr;
+    white-space: nowrap;
+    transform: rotate(-45deg);
+    position: relative;
+    left: -10px;
+}
+.from {
+    white-space: nowrap;
+}
+.high {
+    color: #F00;
+}
+.med {
+    color: #FF0;
+}
+.low {
+    color: #0F0;
+}
+.ping {
+    width: 30px;
+    height: 30px;
+    text-align: center;
+}
