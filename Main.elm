@@ -74,8 +74,11 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ printError model.error, viewTable model.hosts ]
+    div [ Html.Attributes.class "goldpinger" ]
+        [ printError model.error
+        , Html.h1 [] [ text "Goldpinger" ]
+        , viewTable model.hosts
+        ]
 
 
 printError : String -> Html Msg
@@ -100,26 +103,26 @@ viewRow host =
     Html.tr []
         (List.concat
             [ [ Html.td [] [ Html.text host.source ] ]
-            , (List.map
-                viewPing
-                host.pings
-              )
+            , List.map (viewPing host.source) host.pings
             ]
         )
 
 
-viewPing : Ping -> Html Msg
-viewPing ping =
-    Html.td []
-        [ text "target"
-        , text ping.target
-        , br [] []
-        , text "delay"
-        , text (toString ping.delay)
-        , br [] []
-        , text "timestamp"
-        , text (toString ping.timestamp)
-        ]
+viewPing : String -> Ping -> Html Msg
+viewPing source ping =
+    if ping.target == source then
+        Html.td [ Html.Attributes.class "local-machine" ] [ text "local" ]
+    else
+        Html.td []
+            [ text "target: "
+            , text ping.target
+            , br [] []
+            , text "delay: "
+            , text (toString ping.delay)
+            , br [] []
+            , text "timestamp: "
+            , text (toString ping.timestamp)
+            ]
 
 
 fetchResults : Cmd Msg
