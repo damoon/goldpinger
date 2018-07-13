@@ -10,7 +10,9 @@ FROM golang:1.10.3-alpine3.8 AS backend
 RUN mkdir -p /go/src/github.com/damoon/goldpinger
 WORKDIR /go/src/github.com/damoon/goldpinger
 COPY vendor /go/src/github.com/damoon/goldpinger/vendor
+RUN go build all
 COPY pkg /go/src/github.com/damoon/goldpinger/pkg
+RUN go build github.com/damoon/goldpinger/pkg
 COPY main.go /go/src/github.com/damoon/goldpinger/main.go
 RUN CGO_ENABLED=0 GOOS=linux go install -a -installsuffix cgo .
 
