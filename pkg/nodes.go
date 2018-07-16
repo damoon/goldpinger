@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core_v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
-func listNodes(k corev1.CoreV1Interface) {
+func listNodes(k core_v1.CoreV1Interface) {
 	for {
-		pods, err := k.Pods("").List(metav1.ListOptions{})
+		pods, err := k.Pods("").List(meta_v1.ListOptions{})
 		if err != nil {
 			panic(err.Error())
 		}
@@ -20,7 +20,7 @@ func listNodes(k corev1.CoreV1Interface) {
 		// Examples for error handling:
 		// - Use helper functions like e.g. errors.IsNotFound()
 		// - And/or cast to StatusError and use its properties like e.g. ErrStatus.Message
-		_, err = k.Pods("default").Get("example-xxxxx", metav1.GetOptions{})
+		_, err = k.Pods("default").Get("example-xxxxx", meta_v1.GetOptions{})
 		if errors.IsNotFound(err) {
 			fmt.Printf("Pod not found\n")
 		} else if statusError, isStatus := err.(*errors.StatusError); isStatus {
