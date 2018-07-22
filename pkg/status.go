@@ -4,71 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math/rand"
 	"net/http"
-	"time"
-
-	"k8s.io/client-go/kubernetes"
 )
 
-type model []host
+// Status send the http latencies json encoded to the http request
+func Status(w http.ResponseWriter, r *http.Request, m model) {
 
-type host struct {
-	Source string `json:"source"`
-	Pings  []ping `json:"pings"`
-}
-
-type ping struct {
-	Target    string `json:"target"`
-	Delay     int    `json:"delay"`
-	Timestamp int64  `json:"timestamp"`
-}
-
-// Status prints its current view of the world json encoded
-func Status(w http.ResponseWriter, r *http.Request, k *kubernetes.Clientset, namespace *string) {
-
-	hosts := []host{
-		host{
-			Source: "host1",
-			Pings: []ping{
-				ping{Target: "host1", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
-				ping{Target: "host2", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
-				ping{Target: "host3", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
-				ping{Target: "host4", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
-			},
-		},
-		host{
-			Source: "host2",
-			Pings: []ping{
-				ping{Target: "host1", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
-				ping{Target: "host2", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
-				ping{Target: "host3", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
-				ping{Target: "host4", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
-			},
-		},
-		host{
-			Source: "host3",
-			Pings: []ping{
-				ping{Target: "host1", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
-				ping{Target: "host2", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
-				ping{Target: "host3", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
-				ping{Target: "host4", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
-			},
-		},
-		host{
-			Source: "host4",
-			Pings: []ping{
-				ping{Target: "host1", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
-				ping{Target: "host2", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
-				ping{Target: "host3", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
-				ping{Target: "host4", Delay: rand.Int() % 100, Timestamp: time.Now().Unix()},
-			},
-		},
-	}
-
-	json, err := json.Marshal(hosts)
+	json, err := json.Marshal(m)
 	if err != nil {
-		log.Fatalf("failed to marshal pings to json: %v", err)
+		log.Fatalf("failed to marshal model to json: %v", err)
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

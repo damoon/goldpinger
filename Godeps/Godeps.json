@@ -2,9 +2,6 @@
 	"ImportPath": "github.com/damoon/goldpinger",
 	"GoVersion": "go1.10",
 	"GodepVersion": "v80",
-	"Packages": [
-		"./..."
-	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/ghodss/yaml",
@@ -98,6 +95,10 @@
 			"Rev": "05fbef0ca5da472bbf96c9322b84a53edc03c9fd"
 		},
 		{
+			"ImportPath": "github.com/mohae/deepcopy",
+			"Rev": "c48cc78d482608239f6c4c92a4abd87eb8761c90"
+		},
+		{
 			"ImportPath": "github.com/peterbourgon/diskv",
 			"Comment": "v2.0.1",
 			"Rev": "5f041e8faa004a95c88a202771f4cc3e991971e6"
@@ -158,6 +159,11 @@
 		{
 			"ImportPath": "golang.org/x/time/rate",
 			"Rev": "f51c12702a4d776e4c1fa9b0fabab841babae631"
+		},
+		{
+			"ImportPath": "gopkg.in/d4l3k/messagediff.v1",
+			"Comment": "v1.2.1",
+			"Rev": "29f32d820d112dbd66e58492a6ffb7cc3106312b"
 		},
 		{
 			"ImportPath": "gopkg.in/inf.v0",
