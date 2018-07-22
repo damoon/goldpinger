@@ -161,11 +161,6 @@
 			"Rev": "f51c12702a4d776e4c1fa9b0fabab841babae631"
 		},
 		{
-			"ImportPath": "gopkg.in/d4l3k/messagediff.v1",
-			"Comment": "v1.2.1",
-			"Rev": "29f32d820d112dbd66e58492a6ffb7cc3106312b"
-		},
-		{
 			"ImportPath": "gopkg.in/inf.v0",
 			"Comment": "v0.9.0",
 			"Rev": "3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4"

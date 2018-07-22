@@ -3,7 +3,9 @@ package main
 import (
 	"flag"
 	"log"
+	"math/rand"
 	"net/http"
+	"time"
 
 	"github.com/damoon/goldpinger/pkg"
 
@@ -15,6 +17,7 @@ import (
 
 func main() {
 
+	var seed = flag.Int64("seed", time.Now().UnixNano(), "seed to use for random number generators")
 	var addr = flag.String("addr", ":80", "address to listen on")
 	var kubeconfig = flag.String("kubeconfig", "", "(optional) absolute path to the kubeconfig file")
 	var namespace = flag.String("namespace", "goldpinger", "namespace to ping pods in")
@@ -37,14 +40,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to watch nodes: %v", err)
 	}
-	u := goldpinger.NewPinger(p.ResultChan(), n.ResultChan())
+	r := rand.New(rand.NewSource(seed))
+	u := goldpinger.NewPinger(p.ResultChan(), n.ResultChan(), r)
 	log.Printf("starting pinger")
 	u.Start()
 
 	r := http.NewServeMux()
 	r.HandleFunc("/ok", goldpinger.OK)
 	r.HandleFunc("/state.json", func(w http.ResponseWriter, r *http.Request) {
-		goldpinger.Status(w, r, u.Mock())
+		goldpinger.Status(w, r, u)
 	})
 	r.HandleFunc("/", http.FileServer(http.Dir("./static/")).ServeHTTP)
 	server := &http.Server{Addr: *addr, Handler: r}
