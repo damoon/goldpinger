@@ -3,6 +3,7 @@ package goldpinger
 import (
 	"fmt"
 	"log"
+	"sort"
 
 	"k8s.io/api/core/v1"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -23,25 +24,33 @@ func updateTargets(s chan<- func(p *Pinger), e watch.Event) {
 		log.Printf("event %s for pod %s", e.Type, pod.Name)
 
 		s <- func(p *Pinger) {
-			p.targets[pod.Spec.NodeName] = &Node{
+			p.model.Nodes = addNodeIfMissing(p.model.Nodes, &Node{
 				HostIP:   pod.Status.HostIP,
 				HostName: pod.Spec.NodeName,
 				PodIP:    pod.Status.PodIP,
 				PodName:  pod.Name,
-			}
-
-			for _, s := range *p.model {
-				if s.HostName == pod.Spec.NodeName {
-					s.HostIP, s.PodName, s.PodIP = pod.Status.HostIP, pod.Name, pod.Status.PodIP
-					return
-				}
-			}
-			*p.model = append((*p.model), &Source{
-				Node:         *p.targets[pod.Spec.NodeName],
-				Measurements: []*Measurement{},
 			})
 		}
 	case watch.Error:
 		fmt.Printf("%+v\n", e.Object)
 	}
 }
+
+func addNodeIfMissing(nodes []*Node, node *Node) []*Node {
+	for _, n := range nodes {
+		if n.HostName == node.HostName {
+			n.HostIP, n.PodName, n.PodIP = node.HostIP, node.PodName, node.PodIP
+			return nodes
+		}
+	}
+
+	list := append(nodes, node)
+	sort.Sort(byHostname(list))
+	return list
+}
+
+type byHostname []*Node
+
+func (a byHostname) Len() int           { return len(a) }
+func (a byHostname) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byHostname) Less(i, j int) bool { return a[i].HostName < a[j].HostName }

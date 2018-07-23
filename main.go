@@ -43,23 +43,18 @@ func main() {
 		log.Fatalf("failed to create kubernetes client: %v", err)
 	}
 
-	p, err := client.CoreV1().Pods(*namespace).Watch(meta_v1.ListOptions{})
+	pods, err := client.CoreV1().Pods(*namespace).Watch(meta_v1.ListOptions{})
 	if err != nil {
 		log.Fatalf("failed to watch pods in namespace %s: %v", *namespace, err)
 	}
 	r := rand.New(rand.NewSource(*seed))
-	u := goldpinger.NewPinger(*hostName, p.ResultChan(), r)
+	pinger := goldpinger.NewPinger(*hostName, pods.ResultChan(), r)
 	log.Printf("starting pinger")
-	u.Start()
+	pinger.Start()
 
 	m := http.NewServeMux()
 	m.HandleFunc("/ok", goldpinger.OK)
-	m.HandleFunc("/status.json", func(w http.ResponseWriter, r *http.Request) {
-		goldpinger.Status(w, r, u)
-	})
-	m.HandleFunc("/gossip.json", func(w http.ResponseWriter, r *http.Request) {
-		goldpinger.Gossip(w, r, u)
-	})
+	m.HandleFunc("/status.json", pinger.Status)
 	m.HandleFunc("/", http.FileServer(http.Dir("./static/")).ServeHTTP)
 	server := &http.Server{Addr: *addr, Handler: m}
 	log.Printf("start to listen on %v", *addr)

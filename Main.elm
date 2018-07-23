@@ -10,6 +10,7 @@ import Http
 import Json.Decode
 import Time exposing (Time, second)
 import Round
+import Dict exposing (Dict)
 
 
 main : Program Never Model Msg
@@ -24,9 +25,7 @@ main =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { hosts = [], error = "" }
-    , fetchResults
-    )
+    ( { nodes = [], measurements = Dict.fromList [], error = "" }, fetchResults )
 
 
 subscriptions : Model -> Sub Msg
@@ -35,20 +34,22 @@ subscriptions model =
 
 
 type alias Model =
-    { hosts : List Source
+    { nodes : List Node
+    , measurements : Dict String Dict String Measurement
     , error : String
     }
 
 
-type alias Source =
+type alias Node =
     { hostName : String
-    , measurements : List Measurement
+    , hostIP : String
+    , podName : String
+    , podIP : String
     }
 
 
 type alias Measurement =
-    { target : String
-    , delay : Int
+    { delay : Int
     , timestamp : Int
     , error : String
     }
@@ -56,7 +57,7 @@ type alias Measurement =
 
 type Msg
     = Tick Time
-    | NewResults (Result Http.Error (List Source))
+    | NewResults (Result Http.Error Model)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -79,7 +80,7 @@ view model =
         , css "styles.css"
         , printError model.error
         , Html.h1 [] [ text "Goldpinger" ]
-        , viewTable model.hosts
+        , viewTable model
         ]
 
 
@@ -96,52 +97,36 @@ printError error =
         div [ class "error" ] [ text error ]
 
 
-viewTable : List Source -> Html Msg
-viewTable hosts =
-    let
-        sorted =
-            List.sortBy .hostName hosts
-    in
-        Html.table [] (List.concat [ [ viewHosts sorted ], List.map viewRow sorted ])
+viewTable : Model -> Html Msg
+viewTable model =
+    Html.table [] (List.concat [ [ viewHosts model ], List.map viewRow model.nodes ])
 
 
-viewHosts : List Source -> Html Msg
-viewHosts hosts =
+viewHosts : Model -> Html Msg
+viewHosts model =
     Html.tr []
         (List.concat
             [ [ Html.td [] [] ]
-            , List.map (\h -> Html.td [] [ div [ class "to" ] [ text "to ", text h.hostName ] ]) hosts
+            , List.map (\h -> Html.td [] [ div [ class "to" ] [ text "to ", text h.hostName ] ]) model.nodes
             ]
         )
 
 
-viewRow : Source -> Html Msg
-viewRow host =
-    let
-        sorted =
-            List.sortBy .target host.measurements
-    in
-        Html.tr []
-            (List.concat
-                [ [ Html.td [] [ text "from ", text host.hostName ] ]
-                , List.map (viewPing host.hostName) sorted
-                ]
-            )
+viewRow : Node -> List String -> Dict String Measurement -> Html Msg
+viewRow node nodes measurements =
+    Html.tr []
+        (List.concat
+            [ [ Html.td [] [ text "from ", text node.hostName ] ]
+            , List.map (printColored) measurements
+            ]
+        )
 
 
-viewPing : String -> Measurement -> Html Msg
-viewPing source ping =
-    if ping.target == source then
-        Html.td [ Html.Attributes.class "local-machine" ] [ text "-" ]
-    else
-        printColored ping.delay
-
-
-printColored : Int -> Html Msg
-printColored delay =
+printColored : Measurement -> Html Msg
+printColored ping =
     let
         delayInMilisec =
-            toFloat delay / 100000
+            toFloat ping.delay / 100000
 
         display =
             Round.round 2 delayInMilisec
@@ -159,17 +144,23 @@ fetchResults =
     Http.send NewResults (Http.get "./status.json" (Json.Decode.list decodeHost))
 
 
-decodeHost : Json.Decode.Decoder Source
+decodeModel : Json.Decode.Decoder Model
+decodeModel =
+    Json.Decode.dict Dict Measurement
+
+
+decodeHost : Json.Decode.Decoder Node
 decodeHost =
-    Json.Decode.map2 Source
+    Json.Decode.map4 Node
         (Json.Decode.field "hostName" Json.Decode.string)
-        (Json.Decode.field "measurements" (Json.Decode.list decodePing))
+        (Json.Decode.field "hostIP" (Json.Decode.string))
+        (Json.Decode.field "podName" (Json.Decode.string))
+        (Json.Decode.field "podIP" (Json.Decode.string))
 
 
 decodePing : Json.Decode.Decoder Measurement
 decodePing =
-    Json.Decode.map4 Measurement
-        (Json.Decode.field "target" Json.Decode.string)
+    Json.Decode.map3 Measurement
         (Json.Decode.field "delay" Json.Decode.int)
         (Json.Decode.field "timestamp" Json.Decode.int)
         (Json.Decode.field "error" Json.Decode.string)

@@ -20,7 +20,7 @@ var netClient = &http.Client{
 	Timeout: time.Second * 10,
 }
 
-func fetchHTTP(s chan<- func(p *Pinger), targets map[string]*Node, r *rand.Rand) {
+func fetchHTTP(s chan<- func(p *Pinger), targets []*Node, r *rand.Rand) {
 	t, err := randTarget(targets, r)
 	if err != nil {
 		log.Printf("failed to fetch http: %v", err)
@@ -33,25 +33,20 @@ func fetchHTTP(s chan<- func(p *Pinger), targets map[string]*Node, r *rand.Rand)
 		errMsg = err.Error()
 	}
 	s <- func(p *Pinger) {
-
-		for _, source := range *p.model {
-			if source.HostName == p.nodeName {
-				for _, messurement := range source.Measurements {
-					if messurement.Target == t.HostName {
-						messurement.Delay, messurement.Error, messurement.Timestamp = d, errMsg, time.Now().UnixNano()
-						return
-					}
-				}
-				source.Measurements = append(source.Measurements, &Measurement{
-					Target:    t.HostName,
-					Delay:     d,
-					Error:     errMsg,
-					Timestamp: time.Now().UnixNano(),
-				})
-				return
-			}
-		}
+		addMessurement(p.model.Measurements, p.nodeName, t.HostName, &Measurement{
+			Delay:     d,
+			Error:     errMsg,
+			Timestamp: time.Now().UnixNano(),
+		})
 	}
+}
+
+func addMessurement(table map[string]map[string]*Measurement, source, target string, m *Measurement) {
+	_, ok := table[source]
+	if !ok {
+		table[source] = map[string]*Measurement{}
+	}
+	table[source][target] = m
 }
 
 func measureHTTP(url string) (int64, error) {
@@ -65,13 +60,10 @@ func measureHTTP(url string) (int64, error) {
 	return d, nil
 }
 
-func randTarget(m map[string]*Node, r *rand.Rand) (*Node, error) {
-	i := r.Intn(len(m))
-	for k := range m {
-		if i == 0 {
-			return m[k], nil
-		}
-		i--
+func randTarget(m []*Node, r *rand.Rand) (*Node, error) {
+	l := len(m)
+	if l == 0 {
+		return nil, fmt.Errorf("can not select from empty target list")
 	}
-	return nil, fmt.Errorf("can not select from empty target list")
+	return m[r.Intn(l)], nil
 }

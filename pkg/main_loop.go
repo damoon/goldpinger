@@ -7,18 +7,9 @@ import (
 	watch "k8s.io/apimachinery/pkg/watch"
 )
 
-type Model []*Source
-
-type Source struct {
-	Node
-	Measurements []*Measurement `json:"measurements"`
-}
-
-type Measurement struct {
-	Target    string `json:"target"`
-	Timestamp int64  `json:"timestamp"`
-	Delay     int64  `json:"delay"`
-	Error     string `json:"error"`
+type Model struct {
+	Nodes        []*Node                            `json:"nodes"`
+	Measurements map[string]map[string]*Measurement `json:"measurements"`
 }
 
 type Node struct {
@@ -28,15 +19,20 @@ type Node struct {
 	PodIP    string `json:"podIP"`
 }
 
+type Measurement struct {
+	Timestamp int64  `json:"timestamp"`
+	Delay     int64  `json:"delay"`
+	Error     string `json:"error"`
+}
+
 type Pinger struct {
 	rand         *rand.Rand
 	nodeName     string
 	synchronized chan func(p *Pinger)
 	podsWatch    <-chan watch.Event
-	targets      map[string]*Node
 	fetchHTTP    *time.Ticker
 	gossip       *time.Ticker
-	model        *Model
+	model        Model
 }
 
 func NewPinger(nodeName string, p <-chan watch.Event, r *rand.Rand) *Pinger {
@@ -46,10 +42,12 @@ func NewPinger(nodeName string, p <-chan watch.Event, r *rand.Rand) *Pinger {
 		nodeName:     nodeName,
 		synchronized: c,
 		podsWatch:    p,
-		targets:      map[string]*Node{},
 		fetchHTTP:    time.NewTicker(2 * time.Second),
 		gossip:       time.NewTicker(4 * time.Second),
-		model:        &Model{},
+		model: Model{
+			Nodes:        []*Node{},
+			Measurements: map[string]map[string]*Measurement{},
+		},
 	}
 }
 
@@ -66,7 +64,7 @@ func (p *Pinger) Start() {
 		for {
 			select {
 			case <-p.fetchHTTP.C:
-				go fetchHTTP(p.synchronized, p.targets, p.rand)
+				go fetchHTTP(p.synchronized, p.model.Nodes, p.rand)
 			case <-p.gossip.C:
 				//				go gossip(p.targets, p.rand)
 			case event := <-p.podsWatch:
