@@ -17,8 +17,8 @@ COPY main.go /go/src/github.com/damoon/goldpinger/main.go
 RUN go install .
 
 FROM alpine:3.7
-COPY normalize.css normalize.css
-COPY styles.css /styles.css
-COPY --from=frontend /src/main.html /main.html
+COPY normalize.css /static/normalize.css
+COPY styles.css /static/styles.css
+COPY --from=frontend /src/main.html /static/index.html
 COPY --from=backend /go/bin/goldpinger /goldpinger
 ENTRYPOINT ["/goldpinger"]

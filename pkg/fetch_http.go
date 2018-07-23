@@ -28,20 +28,28 @@ func fetchHTTP(s chan<- func(p *Pinger), targets map[string]*Node, r *rand.Rand)
 	}
 
 	d, err := measureHTTP(fmt.Sprintf("http://%s/ok", t.PodIP))
+	errMsg := ""
+	if err != nil {
+		errMsg = err.Error()
+	}
 	s <- func(p *Pinger) {
-		_, ok := (*p.model)[p.nodeName]
-		if !ok {
-			log.Printf("failed to fetch http: source is not set up yet")
-			return
-		}
-		errMsg := ""
-		if err != nil {
-			errMsg = err.Error()
-		}
-		(*p.model)[p.nodeName].Measurements[t.HostName] = &Measurement{
-			Delay:     d,
-			Error:     errMsg,
-			Timestamp: time.Now().UnixNano(),
+
+		for _, source := range *p.model {
+			if source.HostName == p.nodeName {
+				for _, messurement := range source.Measurements {
+					if messurement.Target == t.HostName {
+						messurement.Delay, messurement.Error, messurement.Timestamp = d, errMsg, time.Now().UnixNano()
+						return
+					}
+				}
+				source.Measurements = append(source.Measurements, &Measurement{
+					Target:    t.HostName,
+					Delay:     d,
+					Error:     errMsg,
+					Timestamp: time.Now().UnixNano(),
+				})
+				return
+			}
 		}
 	}
 }

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euxo pipefail
+
 if [ ! -v IMAGE_PUSH_PREFIX ]; then
     IMAGE_PUSH_PREFIX="localhost:5000/goldpinger/goldpinger"
 fi

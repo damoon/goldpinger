@@ -7,14 +7,15 @@ import (
 	watch "k8s.io/apimachinery/pkg/watch"
 )
 
-type Model map[string]*Source
+type Model []*Source
 
 type Source struct {
 	Node
-	Measurements map[string]*Measurement `json:"measurements"`
+	Measurements []*Measurement `json:"measurements"`
 }
 
 type Measurement struct {
+	Target    string `json:"target"`
 	Timestamp int64  `json:"timestamp"`
 	Delay     int64  `json:"delay"`
 	Error     string `json:"error"`

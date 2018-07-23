@@ -21,23 +21,25 @@ func updateTargets(s chan<- func(p *Pinger), e watch.Event) {
 			return
 		}
 		log.Printf("event %s for pod %s", e.Type, pod.Name)
-		n := &Node{
-			HostIP:   pod.Status.HostIP,
-			HostName: pod.Spec.NodeName,
-			PodIP:    pod.Status.PodIP,
-			PodName:  pod.Name,
-		}
+
 		s <- func(p *Pinger) {
-			p.targets[pod.Spec.NodeName] = n
-			src, ok := (*p.model)[pod.Spec.NodeName]
-			if !ok {
-				(*p.model)[pod.Spec.NodeName] = &Source{
-					Node:         *n,
-					Measurements: map[string]*Measurement{},
-				}
-				return
+			p.targets[pod.Spec.NodeName] = &Node{
+				HostIP:   pod.Status.HostIP,
+				HostName: pod.Spec.NodeName,
+				PodIP:    pod.Status.PodIP,
+				PodName:  pod.Name,
 			}
-			src.HostIP, src.HostName, src.PodName, src.PodIP = n.HostIP, n.HostName, n.PodName, n.PodIP
+
+			for _, s := range *p.model {
+				if s.HostName == pod.Spec.NodeName {
+					s.HostIP, s.PodName, s.PodIP = pod.Status.HostIP, pod.Name, pod.Status.PodIP
+					return
+				}
+			}
+			*p.model = append((*p.model), &Source{
+				Node:         *p.targets[pod.Spec.NodeName],
+				Measurements: []*Measurement{},
+			})
 		}
 	case watch.Error:
 		fmt.Printf("%+v\n", e.Object)

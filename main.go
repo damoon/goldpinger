@@ -54,8 +54,11 @@ func main() {
 
 	m := http.NewServeMux()
 	m.HandleFunc("/ok", goldpinger.OK)
-	m.HandleFunc("/state.json", func(w http.ResponseWriter, r *http.Request) {
+	m.HandleFunc("/status.json", func(w http.ResponseWriter, r *http.Request) {
 		goldpinger.Status(w, r, u)
+	})
+	m.HandleFunc("/gossip.json", func(w http.ResponseWriter, r *http.Request) {
+		goldpinger.Gossip(w, r, u)
 	})
 	m.HandleFunc("/", http.FileServer(http.Dir("./static/")).ServeHTTP)
 	server := &http.Server{Addr: *addr, Handler: m}
