@@ -24,6 +24,12 @@ func main() {
 	var namespace = flag.String("namespace", "goldpinger", "namespace to ping pods in")
 	flag.Parse()
 
+	log.Printf("hostName: %v\n", *hostName)
+	log.Printf("seed: %d\n", *seed)
+	log.Printf("addr: %v\n", *addr)
+	log.Printf("kubeconfig: %v\n", *kubeconfig)
+	log.Printf("namespace: %v\n", *namespace)
+
 	if *hostName == "" {
 		log.Fatalf("hostName is not set")
 	}
@@ -41,12 +47,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to watch pods in namespace %s: %v", *namespace, err)
 	}
-	n, err := client.CoreV1().Nodes().Watch(meta_v1.ListOptions{})
-	if err != nil {
-		log.Fatalf("failed to watch nodes: %v", err)
-	}
 	r := rand.New(rand.NewSource(*seed))
-	u := goldpinger.NewPinger(*hostName, p.ResultChan(), n.ResultChan(), r)
+	u := goldpinger.NewPinger(*hostName, p.ResultChan(), r)
 	log.Printf("starting pinger")
 	u.Start()
 

@@ -58,7 +58,7 @@ spec:
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 99%
+      maxUnavailable: 100%
   selector:
     matchLabels:
       k8s-app: goldpinger
@@ -71,8 +71,10 @@ spec:
       containers:
       - name: goldpinger
         image: ${IMAGE}
-        args:
-          - -hostName=${DOLLAR}{NODE_NAME}
+        command:
+          - sh
+          - -c
+          - "/goldpinger -hostName=${DOLLAR}NODE_NAME"
         env:
           - name: NODE_NAME
             valueFrom:
