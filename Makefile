@@ -1,7 +1,4 @@
 
-IMAGE_PUSH_PREFIX ?= localhost:5000/goldpinger/goldpinger
-IMAGE_PULL_PREFIX ?= registry.registry.svc/goldpinger/goldpinger
-
 .PHONY: live-elm
 live-elm:
 	elm-live Main.elm

@@ -17,11 +17,16 @@ import (
 
 func main() {
 
+	var hostName = flag.String("hostName", "", "name of node the pod is running on")
 	var seed = flag.Int64("seed", time.Now().UnixNano(), "seed to use for random number generators")
 	var addr = flag.String("addr", ":80", "address to listen on")
 	var kubeconfig = flag.String("kubeconfig", "", "(optional) absolute path to the kubeconfig file")
 	var namespace = flag.String("namespace", "goldpinger", "namespace to ping pods in")
 	flag.Parse()
+
+	if *hostName == "" {
+		log.Fatalf("hostName is not set")
+	}
 
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
@@ -40,18 +45,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to watch nodes: %v", err)
 	}
-	r := rand.New(rand.NewSource(seed))
-	u := goldpinger.NewPinger(p.ResultChan(), n.ResultChan(), r)
+	r := rand.New(rand.NewSource(*seed))
+	u := goldpinger.NewPinger(*hostName, p.ResultChan(), n.ResultChan(), r)
 	log.Printf("starting pinger")
 	u.Start()
 
-	r := http.NewServeMux()
-	r.HandleFunc("/ok", goldpinger.OK)
-	r.HandleFunc("/state.json", func(w http.ResponseWriter, r *http.Request) {
+	m := http.NewServeMux()
+	m.HandleFunc("/ok", goldpinger.OK)
+	m.HandleFunc("/state.json", func(w http.ResponseWriter, r *http.Request) {
 		goldpinger.Status(w, r, u)
 	})
-	r.HandleFunc("/", http.FileServer(http.Dir("./static/")).ServeHTTP)
-	server := &http.Server{Addr: *addr, Handler: r}
+	m.HandleFunc("/", http.FileServer(http.Dir("./static/")).ServeHTTP)
+	server := &http.Server{Addr: *addr, Handler: m}
 	log.Printf("start to listen on %v", *addr)
 	log.Fatalln(server.ListenAndServe())
 }

@@ -62,7 +62,9 @@ func NewPinger(nodeName string, p <-chan watch.Event, n <-chan watch.Event, r *r
 		nodeName:     nodeName,
 		synchronized: c,
 		podsWatch:    p,
+		targets:      map[string]*Target{},
 		fetchHTTP:    time.NewTicker(2 * time.Second),
 		gossip:       time.NewTicker(4 * time.Second),
+		model:        Model{},
 	}
 }

@@ -14,9 +14,9 @@ RUN go build all
 COPY pkg /go/src/github.com/damoon/goldpinger/pkg
 RUN go build github.com/damoon/goldpinger/pkg
 COPY main.go /go/src/github.com/damoon/goldpinger/main.go
-RUN CGO_ENABLED=0 GOOS=linux go install -a -installsuffix cgo .
+RUN go install .
 
-FROM scratch
+FROM alpine:3.7
 COPY normalize.css normalize.css
 COPY styles.css /styles.css
 COPY --from=frontend /src/main.html /main.html

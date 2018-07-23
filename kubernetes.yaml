@@ -55,6 +55,10 @@ metadata:
   name: goldpinger
   namespace: goldpinger
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 99%
   selector:
     matchLabels:
       k8s-app: goldpinger
@@ -67,6 +71,13 @@ spec:
       containers:
       - name: goldpinger
         image: ${IMAGE}
+        args:
+          - -hostName=${DOLLAR}{NODE_NAME}
+        env:
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
         resources:
           limits:
             memory: 500Mi
@@ -74,6 +85,6 @@ spec:
             cpu: 100m
             memory: 200Mi
         ports:
-        - containerPort: 8080
+        - containerPort: 80
           name: ui
           protocol: TCP
