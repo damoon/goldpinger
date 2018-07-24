@@ -100,7 +100,7 @@ printError error =
     if error == "" then
         text ""
     else
-        div [ class "error" ] [ text error ]
+        div [ class "error" ] [ text "Error: ", text error ]
 
 
 viewTable : Status -> Html Msg
@@ -183,7 +183,8 @@ printMeasurement messurement =
 
 printMeasurementError : String -> Html Msg
 printMeasurementError error =
-    Html.img [ Html.Attributes.alt error, Html.Attributes.src "./alert.png" ] []
+    Html.td [ class "error ping" ]
+        [ Html.img [ Html.Attributes.title error, Html.Attributes.src "./alert.png" ] [] ]
 
 
 printDelay : Int -> Html Msg
