@@ -19,6 +19,7 @@ RUN go install .
 FROM alpine:3.7
 COPY normalize.css /static/normalize.css
 COPY styles.css /static/styles.css
+COPY alert.png /static/alert.png
 COPY --from=frontend /src/main.html /static/index.html
 COPY --from=backend /go/bin/goldpinger /goldpinger
 ENTRYPOINT ["/goldpinger"]

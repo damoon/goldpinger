@@ -165,14 +165,32 @@ viewCell target measurements =
                 emptyCell
 
             Just m ->
-                printColored m
+                printMeasurement m
 
 
-printColored : Measurement -> Html Msg
-printColored ping =
+emptyCell : Html Msg
+emptyCell =
+    Html.td [ class "empty ping" ] []
+
+
+printMeasurement : Measurement -> Html Msg
+printMeasurement messurement =
+    if messurement.error /= "" then
+        printMeasurementError messurement.error
+    else
+        printDelay messurement.delay
+
+
+printMeasurementError : String -> Html Msg
+printMeasurementError error =
+    Html.img [ Html.Attributes.alt error, Html.Attributes.src "./alert.png" ] []
+
+
+printDelay : Int -> Html Msg
+printDelay delayInNanoseconds =
     let
         delayInMilliseconds =
-            toFloat ping.delay / 1000000
+            toFloat delayInNanoseconds / 1000000
 
         display =
             Round.round 1 delayInMilliseconds
@@ -183,11 +201,6 @@ printColored ping =
             Html.td [ class "med ping" ] [ text display ]
         else
             Html.td [ class "low ping" ] [ text display ]
-
-
-emptyCell : Html Msg
-emptyCell =
-    Html.td [ class "empty ping" ] []
 
 
 fetchResults : Cmd Msg
