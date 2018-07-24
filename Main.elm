@@ -11,6 +11,7 @@ import Json.Decode
 import Time exposing (Time, second)
 import Round
 import Dict exposing (Dict)
+import List.Extra exposing (uniqueBy)
 
 
 main : Program Never Model Msg
@@ -62,7 +63,7 @@ type alias Measurement =
 
 type Msg
     = Tick Time
-    | NewResults (Result Http.Error Status)
+    | NewStatus (Result Http.Error Status)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -71,10 +72,10 @@ update msg model =
         Tick newTime ->
             ( model, fetchResults )
 
-        NewResults (Ok newResults) ->
-            ( { model | status = newResults, error = "" }, Cmd.none )
+        NewStatus (Ok status) ->
+            ( { model | status = mergeStatus model.status status, error = "" }, Cmd.none )
 
-        NewResults (Err error) ->
+        NewStatus (Err error) ->
             ( { model | error = toString error }, Cmd.none )
 
 
@@ -191,7 +192,7 @@ emptyCell =
 
 fetchResults : Cmd Msg
 fetchResults =
-    Http.send NewResults (Http.get "./status.json" decodeStatus)
+    Http.send NewStatus (Http.get "./status.json" decodeStatus)
 
 
 decodeStatus : Json.Decode.Decoder Status
@@ -216,3 +217,50 @@ decodeMeasurement =
         (Json.Decode.field "delay" Json.Decode.int)
         (Json.Decode.field "timestamp" Json.Decode.int)
         (Json.Decode.field "error" Json.Decode.string)
+
+
+mergeStatus : Status -> Status -> Status
+mergeStatus old new =
+    { nodes = mergeNodes old.nodes new.nodes
+    , measurements = mergeMessurementRows old.measurements new.measurements
+    }
+
+
+mergeNodes : List Node -> List Node -> List Node
+mergeNodes old new =
+    List.concat [ old, new ]
+        |> uniqueBy (\n -> n.hostName)
+        |> List.sortWith nodesOrder
+
+
+nodesOrder : Node -> Node -> Order
+nodesOrder a b =
+    compare a.hostName b.hostName
+
+
+mergeMessurementRows : Dict comparable (Dict comparable Measurement) -> Dict comparable (Dict comparable Measurement) -> Dict comparable (Dict comparable Measurement)
+mergeMessurementRows old new =
+    Dict.merge Dict.insert messurementsExistsInBoth Dict.insert old new Dict.empty
+
+
+messurementsExistsInBoth : comparable -> Dict comparable Measurement -> Dict comparable Measurement -> Dict comparable (Dict comparable Measurement) -> Dict comparable (Dict comparable Measurement)
+messurementsExistsInBoth key leftValue rightValue dict =
+    Dict.insert key (mergeMessurements leftValue rightValue) dict
+
+
+mergeMessurements : Dict comparable Measurement -> Dict comparable Measurement -> Dict comparable Measurement
+mergeMessurements old new =
+    Dict.merge Dict.insert messurementExistsInBoth Dict.insert old new Dict.empty
+
+
+messurementExistsInBoth : comparable -> Measurement -> Measurement -> Dict comparable Measurement -> Dict comparable Measurement
+messurementExistsInBoth key leftValue rightValue dict =
+    Dict.insert key (newestMessurement leftValue rightValue) dict
+
+
+newestMessurement : Measurement -> Measurement -> Measurement
+newestMessurement some other =
+    if some.timestamp > other.timestamp then
+        some
+    else
+        other
