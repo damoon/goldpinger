@@ -42,8 +42,8 @@ func NewPinger(nodeName string, p <-chan watch.Event, r *rand.Rand) *Pinger {
 		nodeName:     nodeName,
 		synchronized: c,
 		podsWatch:    p,
-		fetchHTTP:    time.NewTicker(2 * time.Second),
-		gossip:       time.NewTicker(4 * time.Second),
+		fetchHTTP:    time.NewTicker(1 * time.Second),
+		gossip:       time.NewTicker(2 * time.Second),
 		model: Model{
 			Nodes:        []*Node{},
 			Measurements: map[string]map[string]*Measurement{},
@@ -66,7 +66,7 @@ func (p *Pinger) Start() {
 			case <-p.fetchHTTP.C:
 				go fetchHTTP(p.synchronized, p.model.Nodes, p.rand)
 			case <-p.gossip.C:
-				//				go gossip(p.targets, p.rand)
+				go gossip(p.synchronized, p.model.Nodes, p.rand)
 			case event := <-p.podsWatch:
 				go updateTargets(p.synchronized, event)
 			}
