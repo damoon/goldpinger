@@ -170,15 +170,15 @@ viewCell target measurements =
 printColored : Measurement -> Html Msg
 printColored ping =
     let
-        delayInMilisec =
-            toFloat ping.delay / 100000
+        delayInMilliseconds =
+            toFloat ping.delay / 1000000
 
         display =
-            Round.round 2 delayInMilisec
+            Round.round 1 delayInMilliseconds
     in
-        if delayInMilisec > 50 then
+        if delayInMilliseconds > 20 then
             Html.td [ class "high ping" ] [ text display ]
-        else if delayInMilisec > 25 then
+        else if delayInMilliseconds > 10 then
             Html.td [ class "med ping" ] [ text display ]
         else
             Html.td [ class "low ping" ] [ text display ]
