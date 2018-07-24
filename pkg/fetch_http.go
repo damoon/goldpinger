@@ -51,12 +51,15 @@ func addMessurement(table map[string]map[string]*Measurement, source, target str
 
 func measureHTTP(url string) (int64, error) {
 	before := time.Now().UnixNano()
-	response, err := netClient.Get(url)
+	resp, err := netClient.Get(url)
 	d := time.Now().UnixNano() - before
 	if err != nil {
 		return d, fmt.Errorf("failed to fetch http: %s", err)
 	}
-	defer response.Body.Close()
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return d, fmt.Errorf("failed to fetch http: returned status code %d from %s", resp.StatusCode, url)
+	}
 	return d, nil
 }
 
