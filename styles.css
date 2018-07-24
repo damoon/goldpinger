@@ -9,8 +9,6 @@ body {
 }
 h1 {
 	font-size: 24px;
-	font-style: normal;
-	font-variant: normal;
 	font-weight: 500;
     line-height: 26.4px;
     color: #D4AF37;
@@ -25,17 +23,9 @@ h1 {
 .from {
     white-space: nowrap;
 }
-.high {
-    color: #F00;
-}
-.med {
-    color: #FF0;
-}
-.low {
-    color: #0F0;
-}
 .ping {
     width: 50px;
     height: 50px;
     text-align: center;
+	font-weight: 1000;
 }

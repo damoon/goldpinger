@@ -195,13 +195,34 @@ printDelay delayInNanoseconds =
 
         display =
             Round.round 1 delayInMilliseconds
+
+        colorStyle =
+            style [ ( "color", color delayInMilliseconds ) ]
     in
-        if delayInMilliseconds > 20 then
-            Html.td [ class "high ping" ] [ text display ]
-        else if delayInMilliseconds > 10 then
-            Html.td [ class "med ping" ] [ text display ]
-        else
-            Html.td [ class "low ping" ] [ text display ]
+        Html.td [ class "ping", colorStyle ] [ text display ]
+
+
+color : Float -> String
+color delay =
+    let
+        r =
+            if delay > 4 then
+                255
+            else
+                255 / 4 * delay
+
+        g =
+            if delay < 4 then
+                255
+            else if delay > 8 then
+                0
+            else
+                255 / 1 * (8 - delay)
+
+        b =
+            0
+    in
+        "rgb(" ++ toString r ++ ", " ++ toString g ++ ", " ++ toString b ++ ")"
 
 
 fetchResults : Cmd Msg
