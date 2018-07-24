@@ -25,7 +25,7 @@ main =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { nodes = [], measurements = Dict.fromList [], error = "" }, fetchResults )
+    ( { status = { nodes = [], measurements = Dict.fromList [] }, error = "" }, fetchResults )
 
 
 subscriptions : Model -> Sub Msg
@@ -34,9 +34,14 @@ subscriptions model =
 
 
 type alias Model =
-    { nodes : List Node
-    , measurements : Dict String Dict String Measurement
+    { status : Status
     , error : String
+    }
+
+
+type alias Status =
+    { nodes : List Node
+    , measurements : Dict String (Dict String Measurement)
     }
 
 
@@ -57,7 +62,7 @@ type alias Measurement =
 
 type Msg
     = Tick Time
-    | NewResults (Result Http.Error Model)
+    | NewResults (Result Http.Error Status)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -67,7 +72,7 @@ update msg model =
             ( model, fetchResults )
 
         NewResults (Ok newResults) ->
-            ( { model | hosts = newResults, error = "" }, Cmd.none )
+            ( { model | status = newResults, error = "" }, Cmd.none )
 
         NewResults (Err error) ->
             ( { model | error = toString error }, Cmd.none )
@@ -78,9 +83,9 @@ view model =
     div [ class "goldpinger" ]
         [ css "https://necolas.github.io/normalize.css/8.0.0/normalize.css"
         , css "styles.css"
-        , printError model.error
         , Html.h1 [] [ text "Goldpinger" ]
-        , viewTable model
+        , viewTable model.status
+        , printError model.error
         ]
 
 
@@ -97,29 +102,69 @@ printError error =
         div [ class "error" ] [ text error ]
 
 
-viewTable : Model -> Html Msg
-viewTable model =
-    Html.table [] (List.concat [ [ viewHosts model ], List.map viewRow model.nodes ])
+viewTable : Status -> Html Msg
+viewTable status =
+    let
+        headline =
+            viewHosts status.nodes
+
+        rows =
+            viewRows status
+    in
+        Html.table [] (List.concat [ [ headline ], rows ])
 
 
-viewHosts : Model -> Html Msg
-viewHosts model =
+viewHosts : List Node -> Html Msg
+viewHosts nodes =
     Html.tr []
         (List.concat
             [ [ Html.td [] [] ]
-            , List.map (\h -> Html.td [] [ div [ class "to" ] [ text "to ", text h.hostName ] ]) model.nodes
+            , List.map (\node -> Html.td [] [ div [ class "to" ] [ text "to ", text node.hostName ] ]) nodes
             ]
         )
 
 
-viewRow : Node -> List String -> Dict String Measurement -> Html Msg
+viewRows : Status -> List (Html Msg)
+viewRows status =
+    List.map (\h -> viewRow h status.nodes status.measurements) status.nodes
+
+
+viewRow : Node -> List Node -> Dict String (Dict String Measurement) -> Html Msg
 viewRow node nodes measurements =
-    Html.tr []
-        (List.concat
-            [ [ Html.td [] [ text "from ", text node.hostName ] ]
-            , List.map (printColored) measurements
-            ]
-        )
+    let
+        m =
+            Dict.get node.hostName measurements
+    in
+        case m of
+            Nothing ->
+                Html.tr []
+                    (List.concat
+                        [ [ Html.td [] [ text "from ", text node.hostName ] ]
+                        , List.map (\node -> emptyCell) nodes
+                        ]
+                    )
+
+            Just m ->
+                Html.tr []
+                    (List.concat
+                        [ [ Html.td [] [ text "from ", text node.hostName ] ]
+                        , List.map (\node -> viewCell node.hostName m) nodes
+                        ]
+                    )
+
+
+viewCell : String -> Dict String Measurement -> Html Msg
+viewCell target measurements =
+    let
+        measurement =
+            Dict.get target measurements
+    in
+        case measurement of
+            Nothing ->
+                emptyCell
+
+            Just m ->
+                printColored m
 
 
 printColored : Measurement -> Html Msg
@@ -139,27 +184,34 @@ printColored ping =
             Html.td [ class "low ping" ] [ text display ]
 
 
+emptyCell : Html Msg
+emptyCell =
+    Html.td [ class "empty ping" ] []
+
+
 fetchResults : Cmd Msg
 fetchResults =
-    Http.send NewResults (Http.get "./status.json" (Json.Decode.list decodeHost))
+    Http.send NewResults (Http.get "./status.json" decodeStatus)
 
 
-decodeModel : Json.Decode.Decoder Model
-decodeModel =
-    Json.Decode.dict Dict Measurement
+decodeStatus : Json.Decode.Decoder Status
+decodeStatus =
+    Json.Decode.map2 Status
+        (Json.Decode.field "nodes" (Json.Decode.list decodeNode))
+        (Json.Decode.field "measurements" (Json.Decode.dict (Json.Decode.dict decodeMeasurement)))
 
 
-decodeHost : Json.Decode.Decoder Node
-decodeHost =
+decodeNode : Json.Decode.Decoder Node
+decodeNode =
     Json.Decode.map4 Node
         (Json.Decode.field "hostName" Json.Decode.string)
-        (Json.Decode.field "hostIP" (Json.Decode.string))
-        (Json.Decode.field "podName" (Json.Decode.string))
-        (Json.Decode.field "podIP" (Json.Decode.string))
+        (Json.Decode.field "hostIP" Json.Decode.string)
+        (Json.Decode.field "podName" Json.Decode.string)
+        (Json.Decode.field "podIP" Json.Decode.string)
 
 
-decodePing : Json.Decode.Decoder Measurement
-decodePing =
+decodeMeasurement : Json.Decode.Decoder Measurement
+decodeMeasurement =
     Json.Decode.map3 Measurement
         (Json.Decode.field "delay" Json.Decode.int)
         (Json.Decode.field "timestamp" Json.Decode.int)
