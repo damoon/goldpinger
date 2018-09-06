@@ -1,19 +1,18 @@
 
-.PHONY: live-elm
-live-elm:
-	elm-live Main.elm
+include ./hack/help.mk
+include ./hack/lint.mk
 
-.PHONY: live-go
-live-go:
-	CompileDaemon -build="go build -o goldpinger main.go" -command="./goldpinger"
-
-.PHONY: proxy
-proxy:
+.PHONY: proxy-api
+proxy-api:
 	kubectl proxy
+
+.PHONY: proxy-registry
+proxy-registry:
+	kubectl -n registry port-forward service/registry 5000
 
 .PHONY: deploy-loop
 deploy-loop:
-	./hack/deploy-loop.sh
+	CompileDaemon -pattern "(.+\\.go|.+\\.elm|.+\\.css|.+\\.yaml|.+\\.yml)$\" -build="make deploy"
 
 .PHONY: deploy
 deploy:

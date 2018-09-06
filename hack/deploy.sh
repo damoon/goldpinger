@@ -14,4 +14,4 @@ IMAGE_PUSH="$IMAGE_PUSH_PREFIX:$HASH"
 IMAGE_PULL="$IMAGE_PULL_PREFIX:$HASH"
 docker tag "$HASH" "$IMAGE_PUSH"
 docker push "$IMAGE_PUSH"
-cat kubernetes.yaml | IMAGE="$IMAGE_PULL" DOLLAR="$" envsubst | kubectl apply -f -
+IMAGE="$IMAGE_PULL" DOLLAR="$" envsubst < kubernetes.yaml | kubectl apply -f -
