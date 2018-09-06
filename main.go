@@ -5,6 +5,8 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"runtime"
+	"strconv"
 	"time"
 
 	"github.com/damoon/goldpinger/pkg"
@@ -53,10 +55,16 @@ func main() {
 	pinger.Start()
 
 	m := http.NewServeMux()
+	m.HandleFunc("/_goroutines", getGoroutinesCountHandler)
 	m.HandleFunc("/ok", goldpinger.OK)
 	m.HandleFunc("/status.json", pinger.Status)
 	m.HandleFunc("/", http.FileServer(http.Dir("./static/")).ServeHTTP)
 	server := &http.Server{Addr: *addr, Handler: m}
 	log.Printf("start to listen on %v", *addr)
 	log.Fatalln(server.ListenAndServe())
+}
+
+func getGoroutinesCountHandler(w http.ResponseWriter, r *http.Request) {
+	count := runtime.NumGoroutine()
+	w.Write([]byte(strconv.Itoa(count)))
 }
