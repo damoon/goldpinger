@@ -9,6 +9,8 @@ import (
 )
 
 func gossip(s chan<- func(p *Pinger), targets []*Node, r *rand.Rand) {
+	log.Printf("gossip started\n")
+	defer log.Printf("gossip done\n")
 	t, err := randTarget(targets, r)
 	if err != nil {
 		log.Printf("failed to gossip: %s", err)

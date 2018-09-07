@@ -10,6 +10,8 @@ import (
 
 // OK confirms a http connection was created
 func OK(w http.ResponseWriter, r *http.Request) {
+	d := rand.Intn(3)
+	time.Sleep(time.Duration(d) * time.Second)
 	_, err := w.Write([]byte("ok"))
 	if err != nil {
 		log.Printf("failed to send response: %v", err)
@@ -21,6 +23,8 @@ var netClient = &http.Client{
 }
 
 func fetchHTTP(s chan<- func(p *Pinger), targets []*Node, r *rand.Rand) {
+	log.Printf("fetch http started\n")
+	defer log.Printf("fetch http done\n")
 	t, err := randTarget(targets, r)
 	if err != nil {
 		log.Printf("failed to fetch http: %v", err)

@@ -1,7 +1,9 @@
 package goldpinger
 
 import (
+	"log"
 	"math/rand"
+	"runtime"
 	"time"
 
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -70,6 +72,8 @@ func (p *Pinger) Start() {
 			case event := <-p.podsWatch:
 				go updateTargets(p.synchronized, event)
 			}
+
+			log.Printf("%d running go routines\n", runtime.NumGoroutine())
 		}
 	}()
 }

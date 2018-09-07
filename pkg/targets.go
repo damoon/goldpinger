@@ -10,6 +10,8 @@ import (
 )
 
 func updateTargets(s chan<- func(p *Pinger), e watch.Event) {
+	log.Printf("updateTargets started\n")
+	defer log.Printf("updateTargets done\n")
 	switch e.Type {
 	case watch.Added:
 		fallthrough
@@ -33,6 +35,9 @@ func updateTargets(s chan<- func(p *Pinger), e watch.Event) {
 		}
 	case watch.Error:
 		fmt.Printf("%+v\n", e.Object)
+	default:
+		log.Printf("unknown event %s", e.Type)
+		log.Printf("event: %v", e)
 	}
 }
 
