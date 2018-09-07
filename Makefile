@@ -2,19 +2,21 @@
 include ./hack/help.mk
 include ./hack/lint.mk
 
-.PHONY: proxy-api
 proxy-api:
 	kubectl proxy
 
-.PHONY: proxy-registry
 proxy-registry:
 	kubectl -n registry port-forward service/registry 5000
 
-.PHONY: deploy-loop
+proxy:
+	kubectl -n goldpinger port-forward service/goldpinger 8080:80
+
+logs:
+	ktail -n goldpinger
+
 deploy-loop:
 	CompileDaemon -pattern "(.+\\.go|.+\\.elm|.+\\.css|.+\\.yaml|.+\\.yml)$\" -build="make deploy"
 
-.PHONY: deploy
 deploy:
 	./hack/deploy.sh
 
