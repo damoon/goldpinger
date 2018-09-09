@@ -36,8 +36,7 @@ func updateTargets(s chan<- func(p *Pinger), e watch.Event) {
 	case watch.Error:
 		fmt.Printf("%+v\n", e.Object)
 	default:
-		log.Printf("unknown event %s", e.Type)
-		log.Printf("event: %v", e)
+		log.Printf("unknown event: %+v\n", e)
 	}
 }
 

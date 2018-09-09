@@ -69,6 +69,8 @@ func (p *Pinger) Start() {
 				go fetchHTTP(p.synchronized, p.model.Nodes, p.rand)
 			case <-p.gossip.C:
 				go gossip(p.synchronized, p.model.Nodes, p.rand)
+			// this fails with https://stackoverflow.com/a/13666733
+			// from logs: goldpinger-bxph2:goldpinger 2018/09/09 20:00:43 unknown event: {Type: Object:<nil>}
 			case event := <-p.podsWatch:
 				go updateTargets(p.synchronized, event)
 			}
