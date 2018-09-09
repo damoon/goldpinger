@@ -6,7 +6,7 @@ COPY elm-stuff /src/elm-stuff
 COPY Main.elm /src/Main.elm
 RUN elm-make Main.elm --output=main.html
 
-FROM golang:1.10.3-alpine3.8 AS backend
+FROM golang:1.11.0-alpine3.8 AS backend
 RUN mkdir -p /go/src/github.com/damoon/goldpinger
 WORKDIR /go/src/github.com/damoon/goldpinger
 COPY vendor /go/src/github.com/damoon/goldpinger/vendor
@@ -16,7 +16,7 @@ RUN go build github.com/damoon/goldpinger/pkg
 COPY main.go /go/src/github.com/damoon/goldpinger/main.go
 RUN go install .
 
-FROM alpine:3.7
+FROM alpine:3.8
 COPY normalize.css /static/normalize.css
 COPY styles.css /static/styles.css
 COPY alert.png /static/alert.png
