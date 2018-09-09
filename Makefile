@@ -14,6 +14,9 @@ proxy:
 logs:
 	ktail -n goldpinger
 
+top:
+	watch kubectl top po -n goldpinger
+
 deploy-loop:
 	CompileDaemon -pattern "(.+\\.go|.+\\.elm|.+\\.css|.+\\.yaml|.+\\.yml)$\" -build="make deploy"
 
