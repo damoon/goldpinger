@@ -10,8 +10,6 @@ import (
 
 // OK confirms a http connection was created
 func OK(w http.ResponseWriter, r *http.Request) {
-	d := rand.Intn(3)
-	time.Sleep(time.Duration(d) * time.Second)
 	_, err := w.Write([]byte("ok"))
 	if err != nil {
 		log.Printf("failed to send response: %v", err)
