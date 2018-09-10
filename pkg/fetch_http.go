@@ -23,8 +23,6 @@ var netClient = &http.Client{
 }
 
 func fetchHTTP(s chan<- func(p *Pinger), targets []*Node, r *rand.Rand) {
-	log.Printf("fetch http started\n")
-	defer log.Printf("fetch http done\n")
 	t, err := randTarget(targets, r)
 	if err != nil {
 		log.Printf("failed to fetch http: %v", err)

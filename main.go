@@ -30,16 +30,16 @@ func main() {
 	log.Printf("namespace: %v\n", *namespace)
 
 	if *hostName == "" {
-		log.Fatalf("hostName is not set")
+		log.Fatalf("hostName is not set\n")
 	}
 
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
-		log.Fatalf("failed to load config for kubernetes client: %v", err)
+		log.Fatalf("failed to load config for kubernetes client: %v\n", err)
 	}
 	client, err := k8sClient.NewForConfig(config)
 	if err != nil {
-		log.Fatalf("failed to create kubernetes client: %v", err)
+		log.Fatalf("failed to create kubernetes client: %v\n", err)
 	}
 
 	pods := client.CoreV1().Pods(*namespace)
@@ -51,7 +51,7 @@ func main() {
 	m.HandleFunc("/ok", goldpinger.OK)
 	m.HandleFunc("/status.json", pinger.Status)
 	m.HandleFunc("/", http.FileServer(http.Dir("./static/")).ServeHTTP)
-	server := &http.Server{Addr: *addr, Handler: m}
 	log.Printf("start to listen on %v", *addr)
+	server := &http.Server{Addr: *addr, Handler: m}
 	log.Fatalln(server.ListenAndServe())
 }

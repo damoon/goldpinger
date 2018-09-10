@@ -68,7 +68,7 @@ func (p *Pinger) start() {
 		for {
 			watch, err := p.pods.Watch(meta_v1.ListOptions{})
 			if err != nil {
-				log.Fatalf("failed to watch pods: %v", err)
+				log.Printf("failed to watch pods: %v\n", err)
 				time.Sleep(1 * time.Second)
 				continue
 			}
@@ -80,6 +80,7 @@ func (p *Pinger) start() {
 					go gossip(p.synchronized, p.model.Nodes, p.rand)
 				case event, ok := <-watch.ResultChan():
 					if !ok {
+						log.Printf("pods watch channel got closed\n")
 						time.Sleep(1 * time.Second)
 						break
 					}
