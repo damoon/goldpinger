@@ -90,7 +90,7 @@ func (p *Pinger) ping() {
 	for {
 		select {
 		case <-p.gossip.C:
-			go gossip(p.synchronized, p.model.Nodes, p.rand)
+			go fetchHTTP(p.synchronized, p.model.Nodes, p.rand)
 		}
 	}
 }
@@ -104,13 +104,14 @@ func (p *Pinger) updatePods() {
 			continue
 		}
 		p.log("created new watch for kubernetes pods\n")
+	updateLoop:
 		for {
 			select {
 			case event, ok := <-watch.ResultChan():
 				if !ok {
 					p.log("pods watch channel got closed\n")
 					time.Sleep(1 * time.Second)
-					break
+					break updateLoop
 				}
 				go updateTargets(p.synchronized, event)
 			}
