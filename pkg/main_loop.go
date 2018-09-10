@@ -49,6 +49,7 @@ func StartNew(nodeName string, kubeConfig, namespace string, r *rand.Rand, l fun
 		synchronized:  c,
 		kubeConfig:    kubeConfig,
 		kubeNamespace: namespace,
+		log:           l,
 		fetchHTTP:     time.NewTicker(1 * time.Second),
 		gossip:        time.NewTicker(2 * time.Second),
 		model: Model{
