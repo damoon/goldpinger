@@ -3,10 +3,10 @@ package goldpinger
 import (
 	"log"
 	"math/rand"
-	"runtime"
 	"time"
 
-	watch "k8s.io/apimachinery/pkg/watch"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
 type Model struct {
@@ -31,19 +31,19 @@ type Pinger struct {
 	rand         *rand.Rand
 	nodeName     string
 	synchronized chan func(p *Pinger)
-	podsWatch    <-chan watch.Event
+	pods         v1.PodInterface
 	fetchHTTP    *time.Ticker
 	gossip       *time.Ticker
 	model        Model
 }
 
-func NewPinger(nodeName string, p <-chan watch.Event, r *rand.Rand) *Pinger {
+func New(nodeName string, pods v1.PodInterface, r *rand.Rand) *Pinger {
 	c := make(chan func(p *Pinger))
 	return &Pinger{
 		rand:         r,
 		nodeName:     nodeName,
 		synchronized: c,
-		podsWatch:    p,
+		pods:         pods,
 		fetchHTTP:    time.NewTicker(1 * time.Second),
 		gossip:       time.NewTicker(2 * time.Second),
 		model: Model{
@@ -64,18 +64,26 @@ func (p *Pinger) Start() {
 	}()
 	go func() {
 		for {
-			select {
-			case <-p.fetchHTTP.C:
-				go fetchHTTP(p.synchronized, p.model.Nodes, p.rand)
-			case <-p.gossip.C:
-				go gossip(p.synchronized, p.model.Nodes, p.rand)
-			// this fails with https://stackoverflow.com/a/13666733
-			// from logs: goldpinger-bxph2:goldpinger 2018/09/09 20:00:43 unknown event: {Type: Object:<nil>}
-			case event := <-p.podsWatch:
-				go updateTargets(p.synchronized, event)
+			watch, err := p.pods.Watch(meta_v1.ListOptions{})
+			if err != nil {
+				log.Fatalf("failed to watch pods: %v", err)
+				time.Sleep(1 * time.Second)
+				continue
 			}
-
-			log.Printf("%d running go routines\n", runtime.NumGoroutine())
+			for {
+				select {
+				case <-p.fetchHTTP.C:
+					go fetchHTTP(p.synchronized, p.model.Nodes, p.rand)
+				case <-p.gossip.C:
+					go gossip(p.synchronized, p.model.Nodes, p.rand)
+				case event, ok := <-watch.ResultChan():
+					if !ok {
+						time.Sleep(1 * time.Second)
+						break
+					}
+					go updateTargets(p.synchronized, event)
+				}
+			}
 		}
 	}()
 }

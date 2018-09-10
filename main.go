@@ -13,7 +13,6 @@ import (
 
 	k8sClient "k8s.io/client-go/kubernetes"
 
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -45,12 +44,9 @@ func main() {
 		log.Fatalf("failed to create kubernetes client: %v", err)
 	}
 
-	pods, err := client.CoreV1().Pods(*namespace).Watch(meta_v1.ListOptions{})
-	if err != nil {
-		log.Fatalf("failed to watch pods in namespace %s: %v", *namespace, err)
-	}
+	pods := client.CoreV1().Pods(*namespace)
 	r := rand.New(rand.NewSource(*seed))
-	pinger := goldpinger.NewPinger(*hostName, pods.ResultChan(), r)
+	pinger := goldpinger.New(*hostName, pods, r)
 	log.Printf("starting pinger")
 	pinger.Start()
 
