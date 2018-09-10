@@ -10,8 +10,6 @@ import (
 )
 
 func updateTargets(s chan<- func(p *Pinger), e watch.Event) {
-	log.Printf("updateTargets started\n")
-	defer log.Printf("updateTargets done\n")
 	switch e.Type {
 	case watch.Added:
 		fallthrough
@@ -23,7 +21,6 @@ func updateTargets(s chan<- func(p *Pinger), e watch.Event) {
 			fmt.Printf("failed to cast %+v to a *v1.Pod\n", e.Object)
 			return
 		}
-		log.Printf("event %s for pod %s", e.Type, pod.Name)
 
 		s <- func(p *Pinger) {
 			p.model.Nodes = addNodeIfMissing(p.model.Nodes, &Node{
