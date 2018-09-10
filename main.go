@@ -29,9 +29,11 @@ func main() {
 		log.Fatalf("hostName is not set\n")
 	}
 
+	//goldpinger.Log = log.Printf
+
 	r := rand.New(rand.NewSource(*seed))
 	log.Printf("starting goldpinger")
-	pinger := goldpinger.StartNew(*hostName, *kubeconfig, *namespace, r, log.Printf)
+	pinger := goldpinger.StartNew(*hostName, *kubeconfig, *namespace, r)
 
 	m := http.NewServeMux()
 	m.HandleFunc("/ok", goldpinger.OK)

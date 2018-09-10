@@ -2,7 +2,6 @@ package goldpinger
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"net/http"
 	"time"
@@ -12,7 +11,7 @@ import (
 func OK(w http.ResponseWriter, r *http.Request) {
 	_, err := w.Write([]byte("ok"))
 	if err != nil {
-		log.Printf("failed to send response: %v", err)
+		Log("failed to send response: %v", err)
 	}
 }
 
@@ -23,7 +22,7 @@ var netClient = &http.Client{
 func fetchHTTP(s chan<- func(p *Pinger), targets []*Node, r *rand.Rand) {
 	t, err := randTarget(targets, r)
 	if err != nil {
-		log.Printf("failed to fetch http: %v", err)
+		Log("failed to fetch http: %v", err)
 		return
 	}
 

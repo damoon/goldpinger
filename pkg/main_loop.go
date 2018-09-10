@@ -2,6 +2,7 @@ package goldpinger
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 
@@ -10,6 +11,8 @@ import (
 	k8sClient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
+
+var Log = log.Printf
 
 type Model struct {
 	Nodes        []*Node                            `json:"nodes"`
@@ -35,13 +38,12 @@ type Pinger struct {
 	synchronized  chan func(p *Pinger)
 	kubeConfig    string
 	kubeNamespace string
-	log           func(format string, v ...interface{})
 	fetchHTTP     *time.Ticker
 	gossip        *time.Ticker
 	model         Model
 }
 
-func StartNew(nodeName string, kubeConfig, namespace string, r *rand.Rand, l func(format string, v ...interface{})) *Pinger {
+func StartNew(nodeName string, kubeConfig, namespace string, r *rand.Rand) *Pinger {
 	c := make(chan func(p *Pinger))
 	p := &Pinger{
 		rand:          r,
@@ -49,7 +51,6 @@ func StartNew(nodeName string, kubeConfig, namespace string, r *rand.Rand, l fun
 		synchronized:  c,
 		kubeConfig:    kubeConfig,
 		kubeNamespace: namespace,
-		log:           l,
 		fetchHTTP:     time.NewTicker(1 * time.Second),
 		gossip:        time.NewTicker(2 * time.Second),
 		model: Model{
@@ -99,17 +100,17 @@ func (p *Pinger) updatePods() {
 	for {
 		watch, err := p.podWatch()
 		if err != nil {
-			p.log("failed to watch pods: %v\n", err)
+			Log("failed to watch pods: %v\n", err)
 			time.Sleep(1 * time.Second)
 			continue
 		}
-		p.log("created new watch for kubernetes pods\n")
+		Log("created new watch for kubernetes pods\n")
 	updateLoop:
 		for {
 			select {
 			case event, ok := <-watch.ResultChan():
 				if !ok {
-					p.log("pods watch channel got closed\n")
+					Log("pods watch channel got closed\n")
 					time.Sleep(1 * time.Second)
 					break updateLoop
 				}

@@ -3,7 +3,6 @@ package goldpinger
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/mohae/deepcopy"
@@ -17,7 +16,7 @@ func (p *Pinger) Status(w http.ResponseWriter, r *http.Request) {
 func status(w http.ResponseWriter, r *http.Request, sync chan<- func(p *Pinger)) {
 	json, err := json.Marshal(model(sync))
 	if err != nil {
-		log.Fatalf("failed to marshal model to json: %v", err)
+		Log("failed to marshal model to json: %v", err)
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")

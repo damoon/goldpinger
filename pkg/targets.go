@@ -2,7 +2,6 @@ package goldpinger
 
 import (
 	"fmt"
-	"log"
 	"sort"
 
 	"k8s.io/api/core/v1"
@@ -33,7 +32,7 @@ func updateTargets(s chan<- func(p *Pinger), e watch.Event) {
 	case watch.Error:
 		fmt.Printf("%+v\n", e.Object)
 	default:
-		log.Printf("unknown event: %+v\n", e)
+		Log("unknown event: %+v\n", e)
 	}
 }
 

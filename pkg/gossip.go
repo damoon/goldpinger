@@ -3,7 +3,6 @@ package goldpinger
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"math/rand"
 	"sort"
 )
@@ -11,13 +10,13 @@ import (
 func gossip(s chan<- func(p *Pinger), targets []*Node, r *rand.Rand) {
 	t, err := randTarget(targets, r)
 	if err != nil {
-		log.Printf("failed to gossip: %s", err)
+		Log("failed to gossip: %s", err)
 		return
 	}
 
 	resp, err := netClient.Get(fmt.Sprintf("http://%s/status.json", t.PodIP))
 	if err != nil {
-		log.Printf("failed to fetch http: %s", err)
+		Log("failed to fetch http: %s", err)
 		return
 	}
 	defer resp.Body.Close()
