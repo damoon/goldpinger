@@ -46,9 +46,8 @@ func main() {
 
 	pods := client.CoreV1().Pods(*namespace)
 	r := rand.New(rand.NewSource(*seed))
-	pinger := goldpinger.New(*hostName, pods, r)
-	log.Printf("starting pinger")
-	pinger.Start()
+	log.Printf("starting goldpinger")
+	pinger := goldpinger.StartNew(*hostName, pods, r)
 
 	m := http.NewServeMux()
 	m.HandleFunc("/_goroutines", getGoroutinesCountHandler)

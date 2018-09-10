@@ -37,9 +37,9 @@ type Pinger struct {
 	model        Model
 }
 
-func New(nodeName string, pods v1.PodInterface, r *rand.Rand) *Pinger {
+func StartNew(nodeName string, pods v1.PodInterface, r *rand.Rand) *Pinger {
 	c := make(chan func(p *Pinger))
-	return &Pinger{
+	p := &Pinger{
 		rand:         r,
 		nodeName:     nodeName,
 		synchronized: c,
@@ -51,9 +51,11 @@ func New(nodeName string, pods v1.PodInterface, r *rand.Rand) *Pinger {
 			Measurements: map[string]map[string]*Measurement{},
 		},
 	}
+	p.start()
+	return p
 }
 
-func (p *Pinger) Start() {
+func (p *Pinger) start() {
 	go func() {
 		for {
 			select {
