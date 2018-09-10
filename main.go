@@ -8,10 +8,6 @@ import (
 	"time"
 
 	"github.com/damoon/goldpinger/pkg"
-
-	k8sClient "k8s.io/client-go/kubernetes"
-
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 func main() {
@@ -33,19 +29,9 @@ func main() {
 		log.Fatalf("hostName is not set\n")
 	}
 
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	if err != nil {
-		log.Fatalf("failed to load config for kubernetes client: %v\n", err)
-	}
-	client, err := k8sClient.NewForConfig(config)
-	if err != nil {
-		log.Fatalf("failed to create kubernetes client: %v\n", err)
-	}
-
-	pods := client.CoreV1().Pods(*namespace)
 	r := rand.New(rand.NewSource(*seed))
 	log.Printf("starting goldpinger")
-	pinger := goldpinger.StartNew(*hostName, pods, r)
+	pinger := goldpinger.StartNew(*hostName, *kubeconfig, *namespace, r, log.Printf)
 
 	m := http.NewServeMux()
 	m.HandleFunc("/ok", goldpinger.OK)
