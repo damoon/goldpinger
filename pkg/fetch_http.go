@@ -2,6 +2,7 @@ package goldpinger
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"time"
@@ -56,6 +57,11 @@ func measureHTTP(url string) (int64, error) {
 		return d, fmt.Errorf("failed to fetch http: %s", err)
 	}
 	defer resp.Body.Close()
+	// https://husobee.github.io/golang/memory/leak/2016/02/11/go-mem-leak.html
+	_, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return d, fmt.Errorf("failed to read http result: %s", err)
+	}
 	if resp.StatusCode != http.StatusOK {
 		return d, fmt.Errorf("failed to fetch http: returned status code %d from %s", resp.StatusCode, url)
 	}
