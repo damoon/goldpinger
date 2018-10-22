@@ -2,26 +2,27 @@
 include ./hack/help.mk
 include ./hack/lint.mk
 
-proxy-api:
+proxy: ##@development proxy kubernetes apiserver
 	kubectl proxy
 
-proxy-registry:
+proxy-registry: ##@development proxy container image registry
 	kubectl -n registry port-forward service/registry 5000
 
-proxy:
-	kubectl -n goldpinger port-forward service/goldpinger 8080:80
+logs: ##@debug show and follow logs
+	ktail -n goldpinger-development
 
-logs:
-	ktail -n goldpinger
+top: ##@debug list containers and resource usage
+	watch "kubectl -n goldpinger-development get po -o wide && kubectl top po -n goldpinger-development"
 
-top:
-	watch kubectl top po -n goldpinger
-
-deploy-loop:
+deploy-loop: ##@deploy deploy every time a file changes
 	CompileDaemon -pattern "(.+\\.go|.+\\.elm|.+\\.css|.+\\.yaml|.+\\.yml)$\" -build="make deploy"
+	$(MAKE) undeploy
 
-deploy:
+deploy: ##@deploy deploy once
 	./hack/deploy.sh
+
+undeploy: ##@deploy undeploy
+	cat kubernetes.yaml | IMAGE="none" DOLLAR="$$" envsubst | kubectl delete -f -
 
 normalize.css:
 	curl -o normalize.css https://necolas.github.io/normalize.css/8.0.0/normalize.css

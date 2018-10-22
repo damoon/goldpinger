@@ -9,6 +9,7 @@ if [ ! -v IMAGE_PULL_PREFIX ]; then
     IMAGE_PULL_PREFIX="registry.registry.svc/goldpinger/goldpinger"
 fi
 
+docker build .
 HASH=$(docker build -q . | cut -d':' -f 2 )
 IMAGE_PUSH="$IMAGE_PUSH_PREFIX:$HASH"
 IMAGE_PULL="$IMAGE_PULL_PREFIX:$HASH"
