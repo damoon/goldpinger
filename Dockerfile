@@ -13,8 +13,8 @@ COPY vendor /go/src/github.com/damoon/goldpinger/vendor
 RUN go build all
 COPY pkg /go/src/github.com/damoon/goldpinger/pkg
 RUN go build github.com/damoon/goldpinger/pkg
-COPY main.go /go/src/github.com/damoon/goldpinger/main.go
-RUN go install .
+COPY cmd/goldpinger /go/src/github.com/damoon/goldpinger/cmd/goldpinger
+RUN go install ./cmd/goldpinger/
 
 FROM alpine:3.8
 COPY normalize.css /static/normalize.css
