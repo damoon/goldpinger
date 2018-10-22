@@ -23,6 +23,10 @@ func gossip(s chan<- func(p *Pinger), targets []*Node, r *rand.Rand) {
 
 	fetchedModel := &Model{}
 	err = json.NewDecoder(resp.Body).Decode(fetchedModel)
+	if err != nil {
+		Log("failed to decode json model: %s", err)
+		return
+	}
 
 	s <- func(p *Pinger) {
 		p.model = merge(*fetchedModel, p.model)

@@ -63,37 +63,19 @@ func StartNew(nodeName string, kubeConfig, namespace string, r *rand.Rand) *Ping
 }
 
 func (p *Pinger) start() {
-	go p.synchronize()
-	go p.gossiping()
-	go p.ping()
+	go func() {
+		for {
+			select {
+			case f := <-p.synchronized:
+				f(p)
+			case <-p.gossip.C:
+				go gossip(p.synchronized, p.model.Nodes, p.rand)
+			case <-p.gossip.C:
+				go fetchHTTP(p.synchronized, p.model.Nodes, p.rand)
+			}
+		}
+	}()
 	go p.updatePods()
-}
-
-func (p *Pinger) synchronize() {
-	for {
-		select {
-		case f := <-p.synchronized:
-			f(p)
-		}
-	}
-}
-
-func (p *Pinger) gossiping() {
-	for {
-		select {
-		case <-p.gossip.C:
-			go gossip(p.synchronized, p.model.Nodes, p.rand)
-		}
-	}
-}
-
-func (p *Pinger) ping() {
-	for {
-		select {
-		case <-p.gossip.C:
-			go fetchHTTP(p.synchronized, p.model.Nodes, p.rand)
-		}
-	}
 }
 
 func (p *Pinger) updatePods() {
@@ -105,18 +87,11 @@ func (p *Pinger) updatePods() {
 			continue
 		}
 		Log("created new watch for kubernetes pods\n")
-	updateLoop:
-		for {
-			select {
-			case event, ok := <-watch.ResultChan():
-				if !ok {
-					Log("pods watch channel got closed\n")
-					time.Sleep(1 * time.Second)
-					break updateLoop
-				}
-				go updateTargets(p.synchronized, event)
-			}
+		for event := range watch.ResultChan() {
+			go updateTargets(p.synchronized, event)
 		}
+		Log("pods watch channel got closed\n")
+		time.Sleep(1 * time.Second)
 	}
 }
 
