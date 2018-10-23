@@ -18,8 +18,7 @@ func status(w http.ResponseWriter, r *http.Request, sync chan<- func(p *Pinger))
 	if err != nil {
 		Log("failed to marshal model to json: %v", err)
 	}
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprint(w, string(json))
 }
 
