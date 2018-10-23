@@ -70,7 +70,7 @@ func (p *Pinger) start() {
 				f(p)
 			case <-p.gossip.C:
 				go gossip(p.synchronized, p.model.Nodes, p.rand)
-			case <-p.gossip.C:
+			case <-p.fetchHTTP.C:
 				go fetchHTTP(p.synchronized, p.model.Nodes, p.rand)
 			}
 		}
