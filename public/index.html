@@ -8,10 +8,18 @@ license that can be found in the LICENSE file.
 
 <head>
 	<meta charset="utf-8">
-	<title>Go wasm</title>
+	<title>Goldpinger</title>
+  <link rel="stylesheet" type="text/css" href="normalize.css">
+  <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 
 <body>
+
+  <div class="goldpinger">
+    <h1>Goldpinger</h1>
+    <section id="thing" >Please wait...</section>
+  </div>
+
 	<!--
 	Add the following polyfill for Microsoft Edge 17/18 support:
 	<script src="https://cdn.jsdelivr.net/npm/text-encoding@0.7.0/lib/encoding.min.js"></script>
@@ -30,8 +38,6 @@ license that can be found in the LICENSE file.
 			go.run(result.instance);
 		});
 	</script>
-  
-  <section id="thing" >Please wait...</section>
 
 </body>
 
