@@ -3,3 +3,4 @@
 /index.html
 /main.html
 /TODO.txt
+*.wasm

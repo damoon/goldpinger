@@ -45,7 +45,7 @@ func main() {
 	m.HandleFunc("/status.json", func(w http.ResponseWriter, r *http.Request) {
 		goldpinger.Status(w, r, ch)
 	})
-	m.HandleFunc("/", http.FileServer(http.Dir("./static/")).ServeHTTP)
+	m.HandleFunc("/", http.FileServer(http.Dir("./public/")).ServeHTTP)
 	log.Printf("start to listen on %v", *addr)
 	server := &http.Server{Addr: *addr, Handler: m}
 	log.Fatalln(server.ListenAndServe())

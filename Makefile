@@ -24,5 +24,8 @@ deploy: ##@deploy deploy once
 undeploy: ##@deploy undeploy
 	cat kubernetes.yaml | IMAGE="none" DOLLAR="$$" envsubst | kubectl delete -f -
 
-normalize.css:
-	curl -o normalize.css https://necolas.github.io/normalize.css/8.0.0/normalize.css
+public/normalize.css:
+	curl -o public/normalize.css https://necolas.github.io/normalize.css/8.0.0/normalize.css
+
+public/wasm_exec.js:
+	curl -o public/wasm_exec.js https://raw.githubusercontent.com/golang/go/release-branch.go1.11/misc/wasm/wasm_exec.js
