@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/damoon/goldpinger/pkg"
+	"github.com/damoon/goldpinger/pkg/k8s"
 )
 
 func main() {
@@ -36,7 +37,7 @@ func main() {
 	ch := goldpinger.StartNewModel()
 	nodeSelector := goldpinger.NewRandomNode(r)
 
-	go goldpinger.PodListSyncing(*kubeconfig, *namespace, ch)
+	go k8s.PodListSyncing(*kubeconfig, *namespace, ch)
 	go goldpinger.Gossiping(ch, nodeSelector)
 	go goldpinger.Measuring(ch, nodeSelector, *hostName)
 

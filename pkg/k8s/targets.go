@@ -1,10 +1,11 @@
-package goldpinger
+package k8s
 
 import (
 	"fmt"
 	"sort"
 	"time"
 
+	"github.com/damoon/goldpinger/pkg"
 	"k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -12,19 +13,19 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-func PodListSyncing(kubeconfig, namespace string, ch ModelAgent) {
+func PodListSyncing(kubeconfig, namespace string, ch goldpinger.ModelAgent) {
 	for {
 		watch, err := newPodWatch(kubeconfig, namespace)
 		if err != nil {
-			Log("failed to watch pods: %v\n", err)
+			goldpinger.Log("failed to watch pods: %v\n", err)
 			time.Sleep(1 * time.Second)
 			continue
 		}
-		Log("created new watch for kubernetes pods\n")
+		goldpinger.Log("created new watch for kubernetes pods\n")
 		for event := range watch.ResultChan() {
 			go updateTargets(ch, event)
 		}
-		Log("pods watch channel got closed\n")
+		goldpinger.Log("pods watch channel got closed\n")
 		time.Sleep(1 * time.Second)
 	}
 }
@@ -43,7 +44,7 @@ func newPodWatch(kubeconfig, namespace string) (watch.Interface, error) {
 	return client.CoreV1().Pods(namespace).Watch(meta_v1.ListOptions{})
 }
 
-func updateTargets(s ModelAgent, e watch.Event) {
+func updateTargets(s goldpinger.ModelAgent, e watch.Event) {
 	switch e.Type {
 	case watch.Added:
 		fallthrough
@@ -56,8 +57,8 @@ func updateTargets(s ModelAgent, e watch.Event) {
 			return
 		}
 
-		s <- func(m *Model) {
-			m.Nodes = addNodeIfMissing(m.Nodes, &Node{
+		s <- func(m *goldpinger.Model) {
+			m.Nodes = addNodeIfMissing(m.Nodes, &goldpinger.Node{
 				HostIP:   pod.Status.HostIP,
 				HostName: pod.Spec.NodeName,
 				PodIP:    pod.Status.PodIP,
@@ -67,11 +68,11 @@ func updateTargets(s ModelAgent, e watch.Event) {
 	case watch.Error:
 		fmt.Printf("%+v\n", e.Object)
 	default:
-		Log("unknown event: %+v\n", e)
+		goldpinger.Log("unknown event: %+v\n", e)
 	}
 }
 
-func addNodeIfMissing(nodes []*Node, node *Node) []*Node {
+func addNodeIfMissing(nodes []*goldpinger.Node, node *goldpinger.Node) []*goldpinger.Node {
 	for _, n := range nodes {
 		if n.HostName == node.HostName {
 			n.HostIP, n.PodName, n.PodIP = node.HostIP, node.PodName, node.PodIP
@@ -80,12 +81,6 @@ func addNodeIfMissing(nodes []*Node, node *Node) []*Node {
 	}
 
 	list := append(nodes, node)
-	sort.Sort(byHostname(list))
+	sort.Sort(goldpinger.ByHostname(list))
 	return list
 }
-
-type byHostname []*Node
-
-func (a byHostname) Len() int           { return len(a) }
-func (a byHostname) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a byHostname) Less(i, j int) bool { return a[i].HostName < a[j].HostName }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"syscall/js"
 
@@ -35,7 +36,11 @@ func startNewModel() ModelAgent {
 }
 
 func (m *Model) Render() string {
-	return fmt.Sprintf("%s", m)
+	json, err := json.Marshal(m)
+	if err != nil {
+		return fmt.Sprintf("failed to marshal model to json: %v", err)
+	}
+	return string(json)
 }
 
 func model(ch ModelAgent) Model {

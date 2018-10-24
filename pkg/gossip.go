@@ -63,9 +63,15 @@ func mergeNodes(right, left []*Node) []*Node {
 			left = append(left, r)
 		}
 	}
-	sort.Sort(byHostname(left))
+	sort.Sort(ByHostname(left))
 	return left
 }
+
+type ByHostname []*Node
+
+func (a ByHostname) Len() int           { return len(a) }
+func (a ByHostname) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByHostname) Less(i, j int) bool { return a[i].HostName < a[j].HostName }
 
 func nodeExist(node *Node, nodes []*Node) bool {
 	for _, n := range nodes {
