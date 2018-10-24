@@ -39,7 +39,7 @@ func fetchHTTP(ch ModelAgent, n *Node, hostname string) {
 		errMsg = err.Error()
 	}
 	ch <- func(m *Model) {
-		addMessurement(m.Measurements, hostname, n.HostName, &Measurement{
+		addMeasurement(m.Measurements, hostname, n.HostName, &Measurement{
 			Delay:     d,
 			Error:     errMsg,
 			Timestamp: t,
@@ -47,7 +47,7 @@ func fetchHTTP(ch ModelAgent, n *Node, hostname string) {
 	}
 }
 
-func addMessurement(table map[string]map[string]*Measurement, source, target string, m *Measurement) {
+func addMeasurement(table map[string]map[string]*Measurement, source, target string, m *Measurement) {
 	_, ok := table[source]
 	if !ok {
 		table[source] = map[string]*Measurement{}
