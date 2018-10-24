@@ -3,7 +3,6 @@ package goldpinger
 import (
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"time"
 )
@@ -20,23 +19,30 @@ var netClient = &http.Client{
 	Timeout: time.Second * 10,
 }
 
-func fetchHTTP(s chan<- func(p *Pinger), targets []*Node, r *rand.Rand) {
-	t, err := randTarget(targets, r)
-	if err != nil {
-		Log("failed to fetch http: %v", err)
-		return
+func Measuring(ch ModelAgent, r RandomNode, hostname string) {
+	t := time.NewTicker(1 * time.Second)
+	for range t.C {
+		trg, err := r(ch)
+		if err != nil {
+			Log("failed to ping: %v", err)
+			return
+		}
+		go fetchHTTP(ch, trg, hostname)
 	}
+}
 
-	d, err := measureHTTP(fmt.Sprintf("http://%s/ok", t.PodIP))
+func fetchHTTP(ch ModelAgent, n *Node, hostname string) {
+	d, err := measureHTTP(fmt.Sprintf("http://%s/ok", n.PodIP))
+	t := time.Now().UnixNano()
 	errMsg := ""
 	if err != nil {
 		errMsg = err.Error()
 	}
-	s <- func(p *Pinger) {
-		addMessurement(p.model.Measurements, p.nodeName, t.HostName, &Measurement{
+	ch <- func(m *Model) {
+		addMessurement(m.Measurements, hostname, n.HostName, &Measurement{
 			Delay:     d,
 			Error:     errMsg,
-			Timestamp: time.Now().UnixNano(),
+			Timestamp: t,
 		})
 	}
 }
@@ -66,12 +72,4 @@ func measureHTTP(url string) (int64, error) {
 		return d, fmt.Errorf("failed to fetch http: returned status code %d from %s", resp.StatusCode, url)
 	}
 	return d, nil
-}
-
-func randTarget(m []*Node, r *rand.Rand) (*Node, error) {
-	l := len(m)
-	if l == 0 {
-		return nil, fmt.Errorf("can not select from empty target list")
-	}
-	return m[r.Intn(l)], nil
 }

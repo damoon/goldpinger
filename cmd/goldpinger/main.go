@@ -31,13 +31,20 @@ func main() {
 
 	//goldpinger.Log = log.Printf
 
-	r := rand.New(rand.NewSource(*seed))
 	log.Printf("starting goldpinger")
-	pinger := goldpinger.StartNew(*hostName, *kubeconfig, *namespace, r)
+	r := rand.New(rand.NewSource(*seed))
+	ch := goldpinger.StartNewModel()
+	nodeSelector := goldpinger.NewRandomNode(r)
+
+	go goldpinger.PodListSyncing(*kubeconfig, *namespace, ch)
+	go goldpinger.Gossiping(ch, nodeSelector)
+	go goldpinger.Measuring(ch, nodeSelector, *hostName)
 
 	m := http.NewServeMux()
 	m.HandleFunc("/ok", goldpinger.OK)
-	m.HandleFunc("/status.json", pinger.Status)
+	m.HandleFunc("/status.json", func(w http.ResponseWriter, r *http.Request) {
+		goldpinger.Status(w, r, ch)
+	})
 	m.HandleFunc("/", http.FileServer(http.Dir("./static/")).ServeHTTP)
 	log.Printf("start to listen on %v", *addr)
 	server := &http.Server{Addr: *addr, Handler: m}
