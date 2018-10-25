@@ -15,8 +15,7 @@ top: ##@debug list containers and resource usage
 	watch "kubectl -n goldpinger-development get po -o wide && kubectl top po -n goldpinger-development"
 
 deploy-loop: ##@deploy deploy every time a file changes
-	CompileDaemon -pattern "(.+\\.go|.+\\.elm|.+\\.css|.+\\.yaml|.+\\.yml)$\" -build="make deploy"
-	$(MAKE) undeploy
+	./hack/deploy-loop.sh
 
 deploy: ##@deploy deploy once
 	./hack/deploy.sh
