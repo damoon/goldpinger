@@ -19,16 +19,23 @@ func main() {
 					fmt.Printf("recovered: %v\n", err)
 				}
 			}()
+			err := updateJson(ch)
+			displayError(err)
 			t := time.NewTicker(1 * time.Second)
 			for range t.C {
 				err := updateJson(ch)
-				if err != nil {
-					el := js.Global().Get("document").Call("getElementById", "errors")
-					el.Set("innerHTML", err.Error())
-				}
+				displayError(err)
 			}
 		}()
 	}
+}
+
+func displayError(err error) {
+	el := js.Global().Get("document").Call("getElementById", "errors")
+	if err == nil {
+		el.Set("innerHTML", "")
+	}
+	el.Set("innerHTML", err.Error())
 }
 
 func updateJson(ch ModelAgent) error {
