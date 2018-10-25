@@ -13,8 +13,8 @@ import (
 )
 
 type Model struct {
-	Model goldpinger.Model
-	Error string
+	Model      goldpinger.Model
+	FetchError string
 }
 
 type ModelAgent chan<- func(m *Model)
@@ -26,14 +26,15 @@ func startNewModel() ModelAgent {
 			Nodes:        []*goldpinger.Node{},
 			Measurements: map[string]map[string]*goldpinger.Measurement{},
 		},
-		Error: "",
+		FetchError: "",
 	}
 	go func() {
 		for f := range c {
 			f(m)
 			d := js.Global().Get("document")
-			d.Call("getElementById", "measurement").Set("innerHTML", m.RenderMeasurement())
-			d.Call("getElementById", "json").Set("innerHTML", m.RenderJson())
+			d.Call("getElementById", "measurement").Set("innerHTML", m.renderMeasurement())
+			d.Call("getElementById", "fetch-error").Set("innerHTML", m.renderFetchError())
+			//d.Call("getElementById", "json").Set("innerHTML", m.renderJSON())
 		}
 	}()
 	return c
@@ -71,7 +72,7 @@ const measurementsTemplate = `<table>
 </table>
 `
 
-func (m *Model) RenderMeasurement() string {
+func (m *Model) renderMeasurement() string {
 
 	nanoToMlli := func(n int64) float64 {
 		return float64(n) / 1000000
@@ -116,13 +117,11 @@ func (m *Model) RenderMeasurement() string {
 	return b.String()
 }
 
-func (m *Model) RenderJson() string {
+func (m *Model) renderFetchError() string {
+	return m.FetchError
+}
 
-	// hacky disable, sorry
-	if true {
-		return ""
-	}
-
+func (m *Model) renderJSON() string {
 	json, err := json.Marshal(m)
 	if err != nil {
 		return fmt.Sprintf("failed to marshal model to json: %v", err)
