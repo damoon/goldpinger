@@ -18,8 +18,19 @@ RUN go install ./cmd/goldpinger/
 COPY cmd/wasm /go/src/github.com/damoon/goldpinger/cmd/wasm
 RUN GOARCH=wasm GOOS=js go build -o cmd/wasm/goldpinger.wasm cmd/wasm/*.go
 
-FROM alpine:3.8
+FROM alpine:3.8 AS deploy
 COPY public /public
 COPY --from=backend /go/src/github.com/damoon/goldpinger/cmd/wasm/goldpinger.wasm /public/goldpinger.wasm
 COPY --from=backend /go/bin/goldpinger /goldpinger
 ENTRYPOINT ["/goldpinger"]
+
+FROM ubuntu:18.04 AS compression
+RUN apt-get update
+RUN apt-get install --no-install-recommends -y zopfli brotli && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=backend /go/src/github.com/damoon/goldpinger/cmd/wasm/goldpinger.wasm /goldpinger.wasm
+RUN brotli /goldpinger.wasm
+RUN zopfli /goldpinger.wasm
+
+FROM deploy AS production
+COPY --from=compression /goldpinger.wasm.br /goldpinger.wasm.gz /public/

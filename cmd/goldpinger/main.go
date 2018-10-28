@@ -9,6 +9,7 @@ import (
 
 	"github.com/damoon/goldpinger/pkg"
 	"github.com/damoon/goldpinger/pkg/k8s"
+	"github.com/lpar/gzipped"
 )
 
 func main() {
@@ -46,7 +47,14 @@ func main() {
 	m.HandleFunc("/status.json", func(w http.ResponseWriter, r *http.Request) {
 		goldpinger.Status(w, r, ch)
 	})
-	m.HandleFunc("/", http.FileServer(http.Dir("./public/")).ServeHTTP)
+	m.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			w.Header().Set("Location", "/index.html")
+			w.WriteHeader(http.StatusMovedPermanently)
+			return
+		}
+		gzipped.FileServer(http.Dir("./public/")).ServeHTTP(w, r)
+	})
 	log.Printf("start to listen on %v", *addr)
 	server := &http.Server{Addr: *addr, Handler: m}
 	log.Fatalln(server.ListenAndServe())
