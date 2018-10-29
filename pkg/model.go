@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"sort"
 
 	"github.com/mohae/deepcopy"
 )
@@ -65,4 +66,78 @@ func NewRandomNode(r *rand.Rand) RandomNode {
 		}
 		return m.Nodes[r.Intn(l)], nil
 	}
+}
+
+func Add(nodes []*Node, node *Node) []*Node {
+	for _, n := range nodes {
+		if n.HostName == node.HostName {
+			n.HostIP, n.PodName, n.PodIP = node.HostIP, node.PodName, node.PodIP
+			return nodes
+		}
+	}
+
+	list := append(nodes, node)
+	sort.Sort(byHostname(list))
+	return list
+}
+
+func Merge(right, left Model) Model {
+	return Model{
+		Nodes:        mergeNodes(right.Nodes, left.Nodes),
+		Measurements: mergeMeasurementRows(right.Measurements, left.Measurements),
+	}
+}
+
+func mergeNodes(right, left []*Node) []*Node {
+	for _, r := range right {
+		if !nodeExist(r, left) {
+			left = append(left, r)
+		}
+	}
+	sort.Sort(byHostname(left))
+	return left
+}
+
+type byHostname []*Node
+
+func (a byHostname) Len() int           { return len(a) }
+func (a byHostname) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byHostname) Less(i, j int) bool { return a[i].HostName < a[j].HostName }
+
+func nodeExist(node *Node, nodes []*Node) bool {
+	for _, n := range nodes {
+		if n.HostName == node.HostName {
+			return true
+		}
+	}
+	return false
+}
+
+func mergeMeasurementRows(right, left map[string]map[string]*Measurement) map[string]map[string]*Measurement {
+	for k, v := range right {
+		l, ok := left[k]
+		if ok {
+			v = mergeMeasurements(v, l)
+		}
+		left[k] = v
+	}
+	return left
+}
+
+func mergeMeasurements(right, left map[string]*Measurement) map[string]*Measurement {
+	for k, v := range right {
+		l, ok := left[k]
+		if ok {
+			v = newestMeasurements(v, l)
+		}
+		left[k] = v
+	}
+	return left
+}
+
+func newestMeasurements(right, left *Measurement) *Measurement {
+	if right.Timestamp > left.Timestamp {
+		return right
+	}
+	return left
 }

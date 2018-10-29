@@ -2,7 +2,6 @@ package k8s
 
 import (
 	"fmt"
-	"sort"
 	"time"
 
 	"github.com/damoon/goldpinger/pkg"
@@ -58,29 +57,17 @@ func updateTargets(s goldpinger.ModelAgent, e watch.Event) {
 		}
 
 		s <- func(m *goldpinger.Model) {
-			m.Nodes = addNodeIfMissing(m.Nodes, &goldpinger.Node{
+			node := &goldpinger.Node{
 				HostIP:   pod.Status.HostIP,
 				HostName: pod.Spec.NodeName,
 				PodIP:    pod.Status.PodIP,
 				PodName:  pod.Name,
-			})
+			}
+			m.Nodes = goldpinger.Add(m.Nodes, node)
 		}
 	case watch.Error:
 		fmt.Printf("%+v\n", e.Object)
 	default:
 		goldpinger.Log("unknown event: %+v\n", e)
 	}
-}
-
-func addNodeIfMissing(nodes []*goldpinger.Node, node *goldpinger.Node) []*goldpinger.Node {
-	for _, n := range nodes {
-		if n.HostName == node.HostName {
-			n.HostIP, n.PodName, n.PodIP = node.HostIP, node.PodName, node.PodIP
-			return nodes
-		}
-	}
-
-	list := append(nodes, node)
-	sort.Sort(goldpinger.ByHostname(list))
-	return list
 }
