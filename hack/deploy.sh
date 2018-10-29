@@ -9,7 +9,7 @@ if [ ! -v "IMAGE_PULL_PREFIX" ]; then
     IMAGE_PULL_PREFIX="registry.registry.svc/goldpinger/goldpinger"
 fi
 if [ ! -v "IMAGE_TARGET" ]; then
-    IMAGE_TARGET="deploy"
+    IMAGE_TARGET="dev"
 fi
 
 docker build . --target $IMAGE_TARGET
