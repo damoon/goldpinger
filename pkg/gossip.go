@@ -45,6 +45,6 @@ func gossip(ch ModelAgent, t *Node) {
 	}
 
 	ch <- func(m *Model) {
-		*m = Merge(*fetchedModel, *m)
+		*m = MergeModel(*fetchedModel, *m)
 	}
 }

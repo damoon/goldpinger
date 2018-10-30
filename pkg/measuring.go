@@ -27,32 +27,38 @@ func Measuring(ch ModelAgent, r RandomNode, hostname string) {
 			Log("failed to ping: %v", err)
 			return
 		}
-		go fetchHTTP(ch, trg, hostname)
+		url := fmt.Sprintf("http://%s/ok", trg.PodIP)
+		go fetchHTTP(ch, trg.HostName, hostname, url)
 	}
 }
 
-func fetchHTTP(ch ModelAgent, n *Node, hostname string) {
-	d, err := measureHTTP(fmt.Sprintf("http://%s/ok", n.PodIP))
+func fetchHTTP(ch ModelAgent, target, source, url string) {
+	d, err := measureHTTP(url)
 	t := time.Now().UnixNano()
 	errMsg := ""
 	if err != nil {
 		errMsg = err.Error()
 	}
 	ch <- func(m *Model) {
-		addMeasurement(m.Measurements, hostname, n.HostName, &Measurement{
+		_, ok := m.Worldview[source]
+		if !ok {
+			m.Worldview[source] = map[string]History{}
+		}
+		h := History{&Measurement{
 			Delay:     d,
 			Error:     errMsg,
 			Timestamp: t,
-		})
+		}}
+		m.Worldview[source][target] = mergeHistories(m.Worldview[source][target], h)
 	}
 }
 
-func addMeasurement(table map[string]map[string]*Measurement, source, target string, m *Measurement) {
+func addMeasurement(table map[string]map[string]History, source, target string, m *Measurement) {
 	_, ok := table[source]
 	if !ok {
-		table[source] = map[string]*Measurement{}
+		table[source] = map[string]History{}
 	}
-	table[source][target] = m
+	table[source][target] = mergeHistories(table[source][target], History{m})
 }
 
 func measureHTTP(url string) (int64, error) {

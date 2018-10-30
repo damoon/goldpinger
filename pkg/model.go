@@ -11,9 +11,11 @@ import (
 
 var Log = log.Printf
 
+const historySize = 10
+
 type Model struct {
-	Nodes        []*Node                            `json:"nodes"`
-	Measurements map[string]map[string]*Measurement `json:"measurements"`
+	Participants []*Node                       `json:"nodes"`
+	Worldview    map[string]map[string]History `json:"measurements"`
 }
 
 type ModelAgent chan<- func(m *Model)
@@ -25,6 +27,8 @@ type Node struct {
 	PodIP    string `json:"podIP"`
 }
 
+type History []*Measurement
+
 type Measurement struct {
 	Timestamp int64  `json:"timestamp"`
 	Delay     int64  `json:"delay"`
@@ -34,8 +38,8 @@ type Measurement struct {
 func StartNewModel() ModelAgent {
 	c := make(chan func(m *Model))
 	m := &Model{
-		Nodes:        []*Node{},
-		Measurements: map[string]map[string]*Measurement{},
+		Participants: []*Node{},
+		Worldview:    map[string]map[string]History{},
 	}
 	go func() {
 		for f := range c {
@@ -60,11 +64,11 @@ type RandomNode func(ModelAgent) (*Node, error)
 func NewRandomNode(r *rand.Rand) RandomNode {
 	return func(ch ModelAgent) (*Node, error) {
 		m := model(ch)
-		l := len(m.Nodes)
+		l := len(m.Participants)
 		if l == 0 {
 			return nil, fmt.Errorf("can not select from empty target list")
 		}
-		return m.Nodes[r.Intn(l)], nil
+		return m.Participants[r.Intn(l)], nil
 	}
 }
 
@@ -81,16 +85,16 @@ func Add(nodes []*Node, node *Node) []*Node {
 	return list
 }
 
-func Merge(right, left Model) Model {
+func MergeModel(right, left Model) Model {
 	return Model{
-		Nodes:        mergeNodes(right.Nodes, left.Nodes),
-		Measurements: mergeMeasurementRows(right.Measurements, left.Measurements),
+		Participants: mergeParticipants(right.Participants, left.Participants),
+		Worldview:    mergeWorldview(right.Worldview, left.Worldview),
 	}
 }
 
-func mergeNodes(right, left []*Node) []*Node {
+func mergeParticipants(right, left []*Node) []*Node {
 	for _, r := range right {
-		if !nodeExist(r, left) {
+		if !participantExist(r, left) {
 			left = append(left, r)
 		}
 	}
@@ -104,7 +108,7 @@ func (a byHostname) Len() int           { return len(a) }
 func (a byHostname) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byHostname) Less(i, j int) bool { return a[i].HostName < a[j].HostName }
 
-func nodeExist(node *Node, nodes []*Node) bool {
+func participantExist(node *Node, nodes []*Node) bool {
 	for _, n := range nodes {
 		if n.HostName == node.HostName {
 			return true
@@ -113,31 +117,36 @@ func nodeExist(node *Node, nodes []*Node) bool {
 	return false
 }
 
-func mergeMeasurementRows(right, left map[string]map[string]*Measurement) map[string]map[string]*Measurement {
+func mergeWorldview(right, left map[string]map[string]History) map[string]map[string]History {
 	for k, v := range right {
 		l, ok := left[k]
 		if ok {
-			v = mergeMeasurements(v, l)
+			v = mergeParticipantsView(v, l)
 		}
 		left[k] = v
 	}
 	return left
 }
 
-func mergeMeasurements(right, left map[string]*Measurement) map[string]*Measurement {
+func mergeParticipantsView(right, left map[string]History) map[string]History {
 	for k, v := range right {
 		l, ok := left[k]
 		if ok {
-			v = newestMeasurements(v, l)
+			v = mergeHistories(v, l)
 		}
 		left[k] = v
 	}
 	return left
 }
 
-func newestMeasurements(right, left *Measurement) *Measurement {
-	if right.Timestamp > left.Timestamp {
-		return right
-	}
-	return left
+func mergeHistories(right, left History) History {
+	h := append(right, left...)
+	sort.Sort(byTimestamp(h))
+	return h[:historySize]
 }
+
+type byTimestamp History
+
+func (a byTimestamp) Len() int           { return len(a) }
+func (a byTimestamp) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byTimestamp) Less(i, j int) bool { return a[i].Timestamp < a[j].Timestamp }
