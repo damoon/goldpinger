@@ -63,7 +63,7 @@ func updateTargets(s goldpinger.ModelAgent, e watch.Event) {
 				PodIP:    pod.Status.PodIP,
 				PodName:  pod.Name,
 			}
-			m.Nodes = goldpinger.Add(m.Nodes, node)
+			m.Participants = goldpinger.Add(m.Participants, node)
 		}
 	case watch.Error:
 		fmt.Printf("%+v\n", e.Object)

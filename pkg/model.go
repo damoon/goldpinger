@@ -11,7 +11,7 @@ import (
 
 var Log = log.Printf
 
-const historySize = 10
+const maxHistoryLength = 10
 
 type Model struct {
 	Participants []*Node                       `json:"nodes"`
@@ -142,7 +142,11 @@ func mergeParticipantsView(right, left map[string]History) map[string]History {
 func mergeHistories(right, left History) History {
 	h := append(right, left...)
 	sort.Sort(byTimestamp(h))
-	return h[:historySize]
+	size := maxHistoryLength
+	if size > len(h) {
+		size = len(h)
+	}
+	return h[:size]
 }
 
 type byTimestamp History

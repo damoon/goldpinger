@@ -23,8 +23,8 @@ func startNewModel() ModelAgent {
 	c := make(chan func(m *Model))
 	m := &Model{
 		Model: goldpinger.Model{
-			Nodes:        []*goldpinger.Node{},
-			Measurements: map[string]map[string]*goldpinger.Measurement{},
+			Participants: []*goldpinger.Node{},
+			Worldview:    map[string]map[string]goldpinger.History{},
 		},
 		FetchError: "",
 	}
@@ -43,32 +43,33 @@ func startNewModel() ModelAgent {
 const measurementsTemplate = `<table>
 <tr>
 	<td/>
-	{{ range $to := $.Nodes }}
-	<td ><div class="to">to {{ $to.HostName }}<div></td>
-	{{ end }}
+	{{range $to := $.Participants -}}
+		<td ><div class="to">to {{ $to.HostName }}<div></td>
+	{{ end -}}
 </tr>
-{{ range $from := $.Nodes }}
+{{- range $from := $.Participants }}
 <tr>
 	<td>from {{ $from.HostName }}</td>
-	{{ range $to := $.Nodes }}
-		{{ $m := index $.Measurements $from.HostName $to.HostName }}
-
-		{{ if $m }}
-			{{ if ne $m.Error "" }}
-				<td><img title="{{ $m.Error }}" src="./alert.png" /></td>
-			{{ else }}
-				{{ $ms := NanoToMilli $m.Delay }}
-				<td class="ping" style="color:{{ Color $ms }};">{{ printf "%.1f" $ms }}</td>
-			{{ end }}
-		{{ else }}
-			<td class="empty ping" />
-		{{ end }}
-
-	{{ end }}
+	{{ range $to := $.Participants -}}
+	{{ $history := index $.Worldview $from.HostName $to.HostName -}}
+	{{ if not $history -}}
+	<td class="empty ping" />
+	{{ else -}}
+	{{ $measurement := index $history 0 -}}
+	{{ if not $measurement -}}
+	<td class="empty ping" />
+	{{ else -}}
+	{{ if ne $measurement.Error "" -}}
+	<td><img title="{{ $measurement.Error }}" src="./alert.png" /></td>
+	{{ else -}}
+	{{ $delay := NanoToMilli $measurement.Delay -}}
+	<td class="ping" style="color:{{ Color $delay }};">{{ printf "%.1f" $delay }}</td>
+	{{ end -}}
+	{{- end -}}
+	{{- end -}}
+	{{- end -}}
 </tr>
-{{ end }}
-
-
+{{- end }}
 </table>
 `
 

@@ -41,7 +41,7 @@ func updateModel(ch ModelAgent) error {
 
 	ch <- func(m *Model) {
 		m.FetchError = ""
-		m.Model = goldpinger.Merge(*update, m.Model)
+		m.Model = goldpinger.MergeModel(*update, m.Model)
 	}
 
 	return nil
