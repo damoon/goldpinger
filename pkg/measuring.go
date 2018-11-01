@@ -44,7 +44,7 @@ func fetchHTTP(ch ModelAgent, target, source, url string) {
 		if !ok {
 			m.Worldview[source] = map[string]History{}
 		}
-		h := History{&Measurement{
+		h := History{Measurement{
 			Delay:     d,
 			Error:     errMsg,
 			Timestamp: t,
@@ -53,7 +53,7 @@ func fetchHTTP(ch ModelAgent, target, source, url string) {
 	}
 }
 
-func addMeasurement(table map[string]map[string]History, source, target string, m *Measurement) {
+func addMeasurement(table map[string]map[string]History, source, target string, m Measurement) {
 	_, ok := table[source]
 	if !ok {
 		table[source] = map[string]History{}

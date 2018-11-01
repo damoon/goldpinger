@@ -42,22 +42,22 @@ func TestModel_renderMeasurement(t *testing.T) {
 					},
 					Worldview: map[string]map[string]goldpinger.History{
 						"nodeOne": map[string]goldpinger.History{
-							"nodeOne": []*goldpinger.Measurement{
-								&goldpinger.Measurement{
+							"nodeOne": []goldpinger.Measurement{
+								goldpinger.Measurement{
 									Delay:     1,
 									Error:     "",
 									Timestamp: 1,
 								},
 							},
-							"nodeTwo": []*goldpinger.Measurement{
-								&goldpinger.Measurement{
+							"nodeTwo": []goldpinger.Measurement{
+								goldpinger.Measurement{
 									Delay:     1,
 									Error:     "",
 									Timestamp: 1,
 								},
 							},
-							"nodeThree": []*goldpinger.Measurement{
-								&goldpinger.Measurement{
+							"nodeThree": []goldpinger.Measurement{
+								goldpinger.Measurement{
 									Delay:     1,
 									Error:     "",
 									Timestamp: 1,
@@ -65,10 +65,10 @@ func TestModel_renderMeasurement(t *testing.T) {
 							},
 						},
 						"nodeTwo": map[string]goldpinger.History{
-							"nodeOne": []*goldpinger.Measurement{},
-							"nodeTwo": []*goldpinger.Measurement{},
-							"nodeThree": []*goldpinger.Measurement{
-								&goldpinger.Measurement{
+							"nodeOne": []goldpinger.Measurement{},
+							"nodeTwo": []goldpinger.Measurement{},
+							"nodeThree": []goldpinger.Measurement{
+								goldpinger.Measurement{
 									Delay:     1,
 									Error:     "some Error",
 									Timestamp: 1,
@@ -76,9 +76,9 @@ func TestModel_renderMeasurement(t *testing.T) {
 							},
 						},
 						"nodeThree": map[string]goldpinger.History{
-							"nodeOne":   []*goldpinger.Measurement{},
-							"nodeTwo":   []*goldpinger.Measurement{},
-							"nodeThree": []*goldpinger.Measurement{},
+							"nodeOne":   []goldpinger.Measurement{},
+							"nodeTwo":   []goldpinger.Measurement{},
+							"nodeThree": []goldpinger.Measurement{},
 						},
 					},
 				},

@@ -27,7 +27,7 @@ type Node struct {
 	PodIP    string `json:"podIP"`
 }
 
-type History []*Measurement
+type History []Measurement
 
 type Measurement struct {
 	Timestamp int64  `json:"timestamp"`
@@ -141,7 +141,7 @@ func mergeParticipantsView(right, left map[string]History) map[string]History {
 
 func mergeHistories(right, left History) History {
 	h := append(right, left...)
-	sort.Sort(byTimestamp(h))
+	sort.Sort(sort.Reverse(byTimestamp(h)))
 	size := maxHistoryLength
 	if size > len(h) {
 		size = len(h)
