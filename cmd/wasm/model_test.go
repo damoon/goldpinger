@@ -44,21 +44,21 @@ func TestModel_renderMeasurement(t *testing.T) {
 						"nodeOne": map[string]goldpinger.History{
 							"nodeOne": []goldpinger.Measurement{
 								goldpinger.Measurement{
-									Delay:     1,
+									Delay:     0,
 									Error:     "",
 									Timestamp: 1,
 								},
 							},
 							"nodeTwo": []goldpinger.Measurement{
 								goldpinger.Measurement{
-									Delay:     1,
+									Delay:     4000000,
 									Error:     "",
 									Timestamp: 1,
 								},
 							},
 							"nodeThree": []goldpinger.Measurement{
 								goldpinger.Measurement{
-									Delay:     1,
+									Delay:     8000000,
 									Error:     "",
 									Timestamp: 1,
 								},
@@ -94,8 +94,8 @@ func TestModel_renderMeasurement(t *testing.T) {
 <tr>
 	<td>from nodeOne</td>
 	<td class="ping" style="color:rgb(0, 255, 0);">0.0</td>
-	<td class="ping" style="color:rgb(0, 255, 0);">0.0</td>
-	<td class="ping" style="color:rgb(0, 255, 0);">0.0</td>
+	<td class="ping" style="color:rgb(252, 252, 0);">4.0</td>
+	<td class="ping" style="color:rgb(255, 0, 0);">8.0</td>
 	</tr>
 <tr>
 	<td>from nodeTwo</td>
@@ -121,6 +121,30 @@ func TestModel_renderMeasurement(t *testing.T) {
 			}
 			if got := m.renderMeasurement(); got != tt.want {
 				t.Errorf("Model.renderMeasurement() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_color(t *testing.T) {
+	type args struct {
+		delay float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{name: "min", args: args{delay: 0}, want: "rgb(0, 255, 0)"},
+		{name: "low", args: args{delay: 2}, want: "rgb(126, 255, 0)"},
+		{name: "mid", args: args{delay: 4}, want: "rgb(252, 252, 0)"},
+		{name: "high", args: args{delay: 6}, want: "rgb(255, 126, 0)"},
+		{name: "max", args: args{delay: 8}, want: "rgb(255, 0, 0)"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := color(tt.args.delay); got != tt.want {
+				t.Errorf("color() = %v, want %v", got, tt.want)
 			}
 		})
 	}

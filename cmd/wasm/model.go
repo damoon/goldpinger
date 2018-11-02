@@ -79,30 +79,10 @@ func (m *Model) renderMeasurement() string {
 		return float64(n) / 1000000
 	}
 
-	color := func(delay float64) string {
-		r := 0
-		g := 0
-		b := 0
-
-		if delay > 4 {
-			r = 255
-		} else {
-			r = int(255 / 4 * delay)
-		}
-
-		if delay < 4 {
-			g = 255
-		} else {
-			if delay > 8 {
-				g = 0
-			} else {
-				g = int(255 / 1 * (8 - delay))
-			}
-		}
-		return "rgb(" + strconv.Itoa(r) + ", " + strconv.Itoa(g) + ", " + strconv.Itoa(b) + ")"
+	fns := template.FuncMap{
+		"NanoToMilli": nanoToMlli,
+		"Color":       color,
 	}
-
-	fns := template.FuncMap{"NanoToMilli": nanoToMlli, "Color": color}
 
 	tpl, err := template.New("measurements").Funcs(fns).Parse(measurementsTemplate)
 	if err != nil {
@@ -116,6 +96,27 @@ func (m *Model) renderMeasurement() string {
 	}
 
 	return b.String()
+}
+
+func color(delay float64) string {
+	r := int((255 / 4) * delay)
+	g := int((255 / 4) * (8 - delay))
+	b := 0
+
+	r = rangeInto(r, 0, 255)
+	g = rangeInto(g, 0, 255)
+
+	return "rgb(" + strconv.Itoa(r) + ", " + strconv.Itoa(g) + ", " + strconv.Itoa(b) + ")"
+}
+
+func rangeInto(value, min, max int) int {
+	if value < min {
+		return min
+	}
+	if value > max {
+		return max
+	}
+	return value
 }
 
 func (m *Model) renderFetchError() string {
