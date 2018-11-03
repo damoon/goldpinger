@@ -53,14 +53,6 @@ func fetchHTTP(ch ModelAgent, target, source, url string) {
 	}
 }
 
-func addMeasurement(table map[string]map[string]History, source, target string, m Measurement) {
-	_, ok := table[source]
-	if !ok {
-		table[source] = map[string]History{}
-	}
-	table[source][target] = mergeHistories(table[source][target], History{m})
-}
-
 func measureHTTP(url string) (int64, error) {
 	before := time.Now().UnixNano()
 	resp, err := netClient.Get(url)

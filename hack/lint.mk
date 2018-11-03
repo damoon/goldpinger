@@ -1,4 +1,6 @@
 
+GOLINT=golangci-lint run --enable-all --fast
+
 .PHONY: lint
 lint: ##@linting Runs all linters.
 	@$(MAKE) lint-bash
@@ -10,5 +12,5 @@ lint-bash: ##@linting Lint Bash scripts.
 
 .PHONY: lint-go
 lint-go: ##@linting Lint Go code.
-	golangci-lint run
-#	gometalinter --enable-all --line-length=120 -t --vendor ./...
+	$(GOLINT) ./cmd/goldpinger ./pkg/ ./pkg/k8s
+	GOOS=js GOARCH=wasm $(GOLINT) ./cmd/wasm

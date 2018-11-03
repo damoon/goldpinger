@@ -2,14 +2,12 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"syscall/js"
 	"text/template"
 
 	"github.com/damoon/goldpinger/pkg"
-	"github.com/mohae/deepcopy"
 )
 
 type Model struct {
@@ -34,7 +32,6 @@ func startNewModel() ModelAgent {
 			d := js.Global().Get("document")
 			d.Call("getElementById", "measurement").Set("innerHTML", m.renderMeasurement())
 			d.Call("getElementById", "fetch-error").Set("innerHTML", m.renderFetchError())
-			//d.Call("getElementById", "json").Set("innerHTML", m.renderJSON())
 		}
 	}()
 	return c
@@ -121,22 +118,4 @@ func rangeInto(value, min, max int) int {
 
 func (m *Model) renderFetchError() string {
 	return m.FetchError
-}
-
-func (m *Model) renderJSON() string {
-	json, err := json.Marshal(m)
-	if err != nil {
-		return fmt.Sprintf("failed to marshal model to json: %v", err)
-	}
-	return string(json)
-}
-
-func model(ch ModelAgent) Model {
-	r := make(chan Model)
-	ch <- func(m *Model) {
-		c := deepcopy.Copy(*m)
-		r <- c.(Model)
-		close(r)
-	}
-	return <-r
 }

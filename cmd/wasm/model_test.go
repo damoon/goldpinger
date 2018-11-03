@@ -21,61 +21,22 @@ func TestModel_renderMeasurement(t *testing.T) {
 			fields: fields{
 				Model: goldpinger.Model{
 					Participants: []*goldpinger.Node{
-						&goldpinger.Node{
-							HostIP:   "1.1.1.1",
-							HostName: "nodeOne",
-							PodIP:    "1.1.1.2",
-							PodName:  "podOne",
-						},
-						&goldpinger.Node{
-							HostIP:   "2.1.1.1",
-							HostName: "nodeTwo",
-							PodIP:    "2.1.1.2",
-							PodName:  "podTwo",
-						},
-						&goldpinger.Node{
-							HostIP:   "3.1.1.1",
-							HostName: "nodeThree",
-							PodIP:    "3.1.1.2",
-							PodName:  "podThree",
-						},
+						{HostIP: "1.1.1.1", HostName: "nodeOne", PodIP: "1.1.1.2", PodName: "podOne"},
+						{HostIP: "2.1.1.1", HostName: "nodeTwo", PodIP: "2.1.1.2", PodName: "podTwo"},
+						{HostIP: "3.1.1.1", HostName: "nodeThree", PodIP: "3.1.1.2", PodName: "podThree"},
 					},
 					Worldview: map[string]map[string]goldpinger.History{
-						"nodeOne": map[string]goldpinger.History{
-							"nodeOne": []goldpinger.Measurement{
-								goldpinger.Measurement{
-									Delay:     0,
-									Error:     "",
-									Timestamp: 1,
-								},
-							},
-							"nodeTwo": []goldpinger.Measurement{
-								goldpinger.Measurement{
-									Delay:     4000000,
-									Error:     "",
-									Timestamp: 1,
-								},
-							},
-							"nodeThree": []goldpinger.Measurement{
-								goldpinger.Measurement{
-									Delay:     8000000,
-									Error:     "",
-									Timestamp: 1,
-								},
-							},
+						"nodeOne": {
+							"nodeOne":   []goldpinger.Measurement{{Delay: 0, Error: "", Timestamp: 1}},
+							"nodeTwo":   []goldpinger.Measurement{{Delay: 4000000, Error: "", Timestamp: 1}},
+							"nodeThree": []goldpinger.Measurement{{Delay: 8000000, Error: "", Timestamp: 1}},
 						},
-						"nodeTwo": map[string]goldpinger.History{
-							"nodeOne": []goldpinger.Measurement{},
-							"nodeTwo": []goldpinger.Measurement{},
-							"nodeThree": []goldpinger.Measurement{
-								goldpinger.Measurement{
-									Delay:     1,
-									Error:     "some Error",
-									Timestamp: 1,
-								},
-							},
+						"nodeTwo": {
+							"nodeOne":   []goldpinger.Measurement{},
+							"nodeTwo":   []goldpinger.Measurement{},
+							"nodeThree": []goldpinger.Measurement{{Delay: 1, Error: "some Error", Timestamp: 1}},
 						},
-						"nodeThree": map[string]goldpinger.History{
+						"nodeThree": {
 							"nodeOne":   []goldpinger.Measurement{},
 							"nodeTwo":   []goldpinger.Measurement{},
 							"nodeThree": []goldpinger.Measurement{},

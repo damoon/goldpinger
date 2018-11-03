@@ -121,14 +121,14 @@ func mergeWorldview(right, left map[string]map[string]History) map[string]map[st
 	for k, v := range right {
 		l, ok := left[k]
 		if ok {
-			v = mergeParticipantsView(v, l)
+			v = mergeParticipantview(v, l)
 		}
 		left[k] = v
 	}
 	return left
 }
 
-func mergeParticipantsView(right, left map[string]History) map[string]History {
+func mergeParticipantview(right, left map[string]History) map[string]History {
 	for k, v := range right {
 		l, ok := left[k]
 		if ok {

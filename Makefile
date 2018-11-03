@@ -23,6 +23,13 @@ deploy: ##@deploy deploy once
 undeploy: ##@deploy undeploy
 	cat kubernetes.yaml | IMAGE="none" DOLLAR="$$" envsubst | kubectl delete -f -
 
+dev-loop: ##@develop test and lint every time a file changes
+	./hack/dev-loop.sh
+
+test: ##develop run tests
+	go test -race -cover ./cmd/goldpinger ./pkg/ ./pkg/k8s
+	GOOS=js GOARCH=wasm go test -cover -exec="$(shell go env GOROOT)/misc/wasm/go_js_wasm_exec" ./cmd/wasm/
+
 public/normalize.css:
 	curl -o public/normalize.css https://necolas.github.io/normalize.css/8.0.0/normalize.css
 
