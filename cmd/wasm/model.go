@@ -10,16 +10,16 @@ import (
 	"github.com/damoon/goldpinger/pkg"
 )
 
-type Model struct {
+type model struct {
 	Status     goldpinger.Status
 	FetchError string
 }
 
-type ModelAgent chan<- func(m *Model)
+type modelAgent chan<- func(m *model)
 
-func startNewModel() ModelAgent {
-	c := make(chan func(m *Model))
-	m := &Model{
+func startNewModel() modelAgent {
+	c := make(chan func(m *model))
+	m := &model{
 		Status: goldpinger.Status{
 			Participants: []*goldpinger.Node{},
 			Worldview:    map[string]map[string]goldpinger.History{},
@@ -70,14 +70,14 @@ const measurementsTemplate = `<table>
 </table>
 `
 
-func (m *Model) renderMeasurement() string {
+func (m *model) renderMeasurement() string {
 
-	nanoToMlli := func(n int64) float64 {
+	nanoToMilli := func(n int64) float64 {
 		return float64(n) / 1000000
 	}
 
 	fns := template.FuncMap{
-		"NanoToMilli": nanoToMlli,
+		"NanoToMilli": nanoToMilli,
 		"Color":       color,
 	}
 
@@ -116,6 +116,6 @@ func rangeInto(value, min, max int) int {
 	return value
 }
 
-func (m *Model) renderFetchError() string {
+func (m *model) renderFetchError() string {
 	return m.FetchError
 }

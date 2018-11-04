@@ -15,7 +15,7 @@ func main() {
 	for ; true; <-t.C {
 		err := updateModel(ch)
 		if err != nil {
-			ch <- func(m *Model) {
+			ch <- func(m *model) {
 				m.FetchError = err.Error()
 			}
 			fmt.Printf("update model: %v\n", err)
@@ -23,7 +23,7 @@ func main() {
 	}
 }
 
-func updateModel(ch ModelAgent) error {
+func updateModel(ch modelAgent) error {
 	resp, err := http.Get("./status.json")
 	if err != nil {
 		return fmt.Errorf("fetch failed: %v", err)
@@ -39,7 +39,7 @@ func updateModel(ch ModelAgent) error {
 		return fmt.Errorf("failed to decode json model: %s", err)
 	}
 
-	ch <- func(m *Model) {
+	ch <- func(m *model) {
 		m.FetchError = ""
 		m.Status = goldpinger.MergeStatus(*update, m.Status)
 	}
