@@ -8,7 +8,7 @@ import (
 
 func TestModel_renderMeasurement(t *testing.T) {
 	type fields struct {
-		Model      goldpinger.Model
+		Status     goldpinger.Status
 		FetchError string
 	}
 	tests := []struct {
@@ -19,7 +19,7 @@ func TestModel_renderMeasurement(t *testing.T) {
 		{
 			name: "incomplete Worldview",
 			fields: fields{
-				Model: goldpinger.Model{
+				Status: goldpinger.Status{
 					Participants: []*goldpinger.Node{
 						{HostIP: "1.1.1.1", HostName: "nodeOne", PodIP: "1.1.1.2", PodName: "podOne"},
 						{HostIP: "2.1.1.1", HostName: "nodeTwo", PodIP: "2.1.1.2", PodName: "podTwo"},
@@ -77,7 +77,7 @@ func TestModel_renderMeasurement(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &Model{
-				Model:      tt.fields.Model,
+				Status:     tt.fields.Status,
 				FetchError: tt.fields.FetchError,
 			}
 			if got := m.renderMeasurement(); got != tt.want {

@@ -34,18 +34,17 @@ func main() {
 	//goldpinger.Log = log.Printf
 
 	log.Printf("starting goldpinger")
-	r := rand.New(rand.NewSource(*seed))
-	ch := goldpinger.StartNewModel()
-	nodeSelector := goldpinger.NewRandomNode(r)
+	random := rand.New(rand.NewSource(*seed))
+	ch := goldpinger.StartNewModel(random)
 
 	go k8s.PodListSyncing(*kubeconfig, *namespace, ch)
-	go goldpinger.Gossiping(ch, nodeSelector)
-	go goldpinger.Measuring(ch, nodeSelector, *hostName)
+	go goldpinger.Gossiping(ch)
+	go goldpinger.Measuring(ch, *hostName)
 
 	m := http.NewServeMux()
 	m.HandleFunc("/ok", goldpinger.OK)
 	m.HandleFunc("/status.json", func(w http.ResponseWriter, r *http.Request) {
-		goldpinger.Status(w, r, ch)
+		goldpinger.PublishStatus(w, r, ch)
 	})
 	m.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {

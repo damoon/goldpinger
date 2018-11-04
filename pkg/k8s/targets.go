@@ -43,7 +43,7 @@ func newPodWatch(kubeconfig, namespace string) (watch.Interface, error) {
 	return client.CoreV1().Pods(namespace).Watch(meta_v1.ListOptions{})
 }
 
-func updateTargets(s goldpinger.ModelAgent, e watch.Event) {
+func updateTargets(ch goldpinger.ModelAgent, e watch.Event) {
 	switch e.Type {
 	case watch.Added:
 		fallthrough
@@ -55,16 +55,12 @@ func updateTargets(s goldpinger.ModelAgent, e watch.Event) {
 			fmt.Printf("failed to cast %+v to a *v1.Pod\n", e.Object)
 			return
 		}
-
-		s <- func(m *goldpinger.Model) {
-			node := &goldpinger.Node{
-				HostIP:   pod.Status.HostIP,
-				HostName: pod.Spec.NodeName,
-				PodIP:    pod.Status.PodIP,
-				PodName:  pod.Name,
-			}
-			m.Participants = goldpinger.Add(m.Participants, node)
-		}
+		ch.Add(&goldpinger.Node{
+			HostIP:   pod.Status.HostIP,
+			HostName: pod.Spec.NodeName,
+			PodIP:    pod.Status.PodIP,
+			PodName:  pod.Name,
+		})
 	case watch.Error:
 		fmt.Printf("%+v\n", e.Object)
 	default:

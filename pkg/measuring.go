@@ -19,10 +19,10 @@ var netClient = &http.Client{
 	Timeout: time.Second * 10,
 }
 
-func Measuring(ch ModelAgent, r RandomNode, hostname string) {
+func Measuring(ch ModelAgent, hostname string) {
 	t := time.NewTicker(1 * time.Second)
 	for range t.C {
-		trg, err := r(ch)
+		trg, err := ch.randomNode()
 		if err != nil {
 			Log("failed to ping: %v", err)
 			return
@@ -40,16 +40,16 @@ func fetchHTTP(ch ModelAgent, target, source, url string) {
 		errMsg = err.Error()
 	}
 	ch <- func(m *Model) {
-		_, ok := m.Worldview[source]
+		_, ok := m.Status.Worldview[source]
 		if !ok {
-			m.Worldview[source] = map[string]History{}
+			m.Status.Worldview[source] = map[string]History{}
 		}
 		h := History{Measurement{
 			Delay:     d,
 			Error:     errMsg,
 			Timestamp: t,
 		}}
-		m.Worldview[source][target] = mergeHistories(m.Worldview[source][target], h)
+		m.Status.Worldview[source][target] = mergeHistories(m.Status.Worldview[source][target], h)
 	}
 }
 

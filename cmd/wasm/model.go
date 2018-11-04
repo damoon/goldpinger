@@ -11,7 +11,7 @@ import (
 )
 
 type Model struct {
-	Model      goldpinger.Model
+	Status     goldpinger.Status
 	FetchError string
 }
 
@@ -20,7 +20,7 @@ type ModelAgent chan<- func(m *Model)
 func startNewModel() ModelAgent {
 	c := make(chan func(m *Model))
 	m := &Model{
-		Model: goldpinger.Model{
+		Status: goldpinger.Status{
 			Participants: []*goldpinger.Node{},
 			Worldview:    map[string]map[string]goldpinger.History{},
 		},
@@ -87,7 +87,7 @@ func (m *Model) renderMeasurement() string {
 	}
 
 	b := &bytes.Buffer{}
-	err = tpl.Execute(b, m.Model)
+	err = tpl.Execute(b, m.Status)
 	if err != nil {
 		return fmt.Sprintf("failed to render measurements template: %v", err)
 	}

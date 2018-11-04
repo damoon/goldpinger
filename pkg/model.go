@@ -14,6 +14,11 @@ var Log = log.Printf
 const maxHistoryLength = 10
 
 type Model struct {
+	Status Status
+	random *rand.Rand
+}
+
+type Status struct {
 	Participants []*Node                       `json:"nodes"`
 	Worldview    map[string]map[string]History `json:"measurements"`
 }
@@ -35,11 +40,14 @@ type Measurement struct {
 	Error     string `json:"error"`
 }
 
-func StartNewModel() ModelAgent {
+func StartNewModel(r *rand.Rand) ModelAgent {
 	c := make(chan func(m *Model))
 	m := &Model{
-		Participants: []*Node{},
-		Worldview:    map[string]map[string]History{},
+		Status: Status{
+			Participants: []*Node{},
+			Worldview:    map[string]map[string]History{},
+		},
+		random: r,
 	}
 	go func() {
 		for f := range c {
@@ -49,57 +57,59 @@ func StartNewModel() ModelAgent {
 	return c
 }
 
-func model(ch ModelAgent) Model {
-	r := make(chan Model)
+func (ch ModelAgent) randomNode() (*Node, error) {
+	type response struct {
+		node *Node
+		err  error
+	}
+	c := make(chan response)
 	ch <- func(m *Model) {
-		c := deepcopy.Copy(*m)
-		r <- c.(Model)
-		close(r)
-	}
-	return <-r
-}
-
-type RandomNode func(ModelAgent) (*Node, error)
-
-func NewRandomNode(r *rand.Rand) RandomNode {
-	return func(ch ModelAgent) (*Node, error) {
-		m := model(ch)
-		l := len(m.Participants)
+		defer close(c)
+		l := len(m.Status.Participants)
 		if l == 0 {
-			return nil, fmt.Errorf("can not select from empty target list")
+			c <- response{nil, fmt.Errorf("can not select from empty target list")}
+			return
 		}
-		return m.Participants[r.Intn(l)], nil
+		i := m.random.Intn(l)
+		n := deepcopy.Copy(m.Status.Participants[i])
+		c <- response{n.(*Node), nil}
+	}
+	n := <-c
+	return n.node, n.err
+}
+
+func (ch ModelAgent) Add(node *Node) {
+	ch <- func(m *Model) {
+		for _, n := range m.Status.Participants {
+			if n.HostName == node.HostName {
+				n.HostIP, n.PodName, n.PodIP = node.HostIP, node.PodName, node.PodIP
+				return
+			}
+		}
+		m.Status.Participants = append(m.Status.Participants, node)
+		sort.Sort(byHostname(m.Status.Participants))
 	}
 }
 
-func Add(nodes []*Node, node *Node) []*Node {
-	for _, n := range nodes {
-		if n.HostName == node.HostName {
-			n.HostIP, n.PodName, n.PodIP = node.HostIP, node.PodName, node.PodIP
-			return nodes
-		}
-	}
-
-	list := append(nodes, node)
-	sort.Sort(byHostname(list))
-	return list
-}
-
-func MergeModel(right, left Model) Model {
-	return Model{
+func MergeStatus(right, left Status) Status {
+	return Status{
 		Participants: mergeParticipants(right.Participants, left.Participants),
 		Worldview:    mergeWorldview(right.Worldview, left.Worldview),
 	}
 }
 
-func mergeParticipants(right, left []*Node) []*Node {
-	for _, r := range right {
-		if !participantExist(r, left) {
-			left = append(left, r)
+func mergeParticipants(pp ...[]*Node) []*Node {
+	resp := []*Node{}
+
+	for _, p := range pp {
+		for _, n := range p {
+			if participantMissing(resp, n) {
+				resp = append(resp, n)
+			}
 		}
 	}
-	sort.Sort(byHostname(left))
-	return left
+	sort.Sort(byHostname(resp))
+	return resp
 }
 
 type byHostname []*Node
@@ -108,13 +118,13 @@ func (a byHostname) Len() int           { return len(a) }
 func (a byHostname) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byHostname) Less(i, j int) bool { return a[i].HostName < a[j].HostName }
 
-func participantExist(node *Node, nodes []*Node) bool {
+func participantMissing(nodes []*Node, node *Node) bool {
 	for _, n := range nodes {
 		if n.HostName == node.HostName {
-			return true
+			return false
 		}
 	}
-	return false
+	return true
 }
 
 func mergeWorldview(right, left map[string]map[string]History) map[string]map[string]History {
@@ -129,24 +139,54 @@ func mergeWorldview(right, left map[string]map[string]History) map[string]map[st
 }
 
 func mergeParticipantview(right, left map[string]History) map[string]History {
-	for k, v := range right {
+	for k, r := range right {
 		l, ok := left[k]
 		if ok {
-			v = mergeHistories(v, l)
+			r = mergeHistories(r, l)
 		}
-		left[k] = v
+		left[k] = r
 	}
 	return left
 }
 
 func mergeHistories(right, left History) History {
-	h := append(right, left...)
-	sort.Sort(sort.Reverse(byTimestamp(h)))
-	size := maxHistoryLength
-	if size > len(h) {
-		size = len(h)
+
+	i, j := 0, 0
+	slice := History{}
+
+	for len(slice) < maxHistoryLength && (i < len(right) || j < len(left)) {
+
+		if i == len(right) {
+			slice = append(slice, left[j])
+			j++
+			continue
+		}
+		if j == len(left) {
+			slice = append(slice, right[i])
+			i++
+			continue
+		}
+
+		if right[i].Timestamp == left[i].Timestamp {
+			slice = append(slice, right[i])
+			i++
+			j++
+			continue
+		}
+		if right[i].Timestamp > left[j].Timestamp {
+			slice = append(slice, right[i])
+			i++
+			continue
+		}
+		if right[i].Timestamp < left[j].Timestamp {
+			slice = append(slice, left[j])
+			j++
+			continue
+		}
 	}
-	return h[:size]
+
+	return slice
+
 }
 
 type byTimestamp History

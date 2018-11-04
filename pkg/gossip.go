@@ -5,22 +5,37 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/mohae/deepcopy"
 )
 
-// Status send the http latencies json encoded to the http request
-func Status(w http.ResponseWriter, r *http.Request, ch ModelAgent) {
-	json, err := json.Marshal(model(ch))
+// PublishStatus sends the latencies as json encoded to via http.
+func PublishStatus(w http.ResponseWriter, r *http.Request, ch ModelAgent) {
+
+	c := make(chan Status)
+	ch <- func(m *Model) {
+		defer close(c)
+		cp := deepcopy.Copy((*m).Status)
+		c <- cp.(Status)
+	}
+	status := <-c
+
+	json, err := json.Marshal(status)
 	if err != nil {
 		Log("failed to marshal model to json: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("500 - internal server error"))
+		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprint(w, string(json))
 }
 
-func Gossiping(ch ModelAgent, r RandomNode) {
+func Gossiping(ch ModelAgent) {
 	t := time.NewTicker(2 * time.Second)
 	for range t.C {
-		trg, err := r(ch)
+		trg, err := ch.randomNode()
 		if err != nil {
 			Log("failed to gossip: %v", err)
 			return
@@ -37,14 +52,14 @@ func gossip(ch ModelAgent, t *Node) {
 	}
 	defer resp.Body.Close()
 
-	fetchedModel := &Model{}
-	err = json.NewDecoder(resp.Body).Decode(fetchedModel)
+	fetchedStatus := &Status{}
+	err = json.NewDecoder(resp.Body).Decode(fetchedStatus)
 	if err != nil {
 		Log("failed to decode json model: %s", err)
 		return
 	}
 
 	ch <- func(m *Model) {
-		*m = MergeModel(*fetchedModel, *m)
+		m.Status = MergeStatus(*fetchedStatus, m.Status)
 	}
 }

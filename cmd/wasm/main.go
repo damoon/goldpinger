@@ -33,7 +33,7 @@ func updateModel(ch ModelAgent) error {
 		return fmt.Errorf("bad http status code %v", resp.StatusCode)
 	}
 
-	update := &goldpinger.Model{}
+	update := &goldpinger.Status{}
 	err = json.NewDecoder(resp.Body).Decode(update)
 	if err != nil {
 		return fmt.Errorf("failed to decode json model: %s", err)
@@ -41,7 +41,7 @@ func updateModel(ch ModelAgent) error {
 
 	ch <- func(m *Model) {
 		m.FetchError = ""
-		m.Model = goldpinger.MergeModel(*update, m.Model)
+		m.Status = goldpinger.MergeStatus(*update, m.Status)
 	}
 
 	return nil
