@@ -20,7 +20,7 @@ func TestModel_renderMeasurement(t *testing.T) {
 			name: "incomplete Worldview",
 			fields: fields{
 				Status: goldpinger.Status{
-					Participants: []*goldpinger.Node{
+					Participants: &[]goldpinger.Node{
 						{HostIP: "1.1.1.1", HostName: "nodeOne", PodIP: "1.1.1.2", PodName: "podOne"},
 						{HostIP: "2.1.1.1", HostName: "nodeTwo", PodIP: "2.1.1.2", PodName: "podTwo"},
 						{HostIP: "3.1.1.1", HostName: "nodeThree", PodIP: "3.1.1.2", PodName: "podThree"},

@@ -23,7 +23,7 @@ func main() {
 	}
 }
 
-func updateModel(ch modelAgent) error {
+func updateModel(ch ModelAccess) error {
 	resp, err := http.Get("./status.json")
 	if err != nil {
 		return fmt.Errorf("fetch failed: %v", err)

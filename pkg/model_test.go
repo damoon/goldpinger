@@ -73,6 +73,36 @@ func Test_mergeHistories(t *testing.T) {
 			},
 		},
 		{
+			name: "same history",
+			args: args{
+				right: History{
+					Measurement{Delay: 1, Error: "", Timestamp: 1},
+				},
+				left: History{
+					Measurement{Delay: 1, Error: "", Timestamp: 1},
+				},
+			},
+			want: History{
+				Measurement{Delay: 1, Error: "", Timestamp: 1},
+			},
+		},
+		{
+			name: "updated history",
+			args: args{
+				right: History{
+					Measurement{Delay: 1, Error: "", Timestamp: 2},
+					Measurement{Delay: 1, Error: "", Timestamp: 1},
+				},
+				left: History{
+					Measurement{Delay: 1, Error: "", Timestamp: 1},
+				},
+			},
+			want: History{
+				Measurement{Delay: 1, Error: "", Timestamp: 2},
+				Measurement{Delay: 1, Error: "", Timestamp: 1},
+			},
+		},
+		{
 			name: "two histories",
 			args: args{
 				right: History{
@@ -124,37 +154,37 @@ func Test_mergeHistories(t *testing.T) {
 	}
 }
 
-func TestModelAgent_randomNode(t *testing.T) {
+func TestModelAccess_randomNode(t *testing.T) {
 	rand.Seed(0)
 	tests := []struct {
 		name    string
-		ch      ModelAgent
-		nodes   []*Node
-		want    *Node
+		ch      ModelAccess
+		nodes   []Node
+		want    Node
 		wantErr bool
 	}{
 		{
 			name:    "empty node list",
 			ch:      StartNewModel(rand.New(rand.NewSource(0))),
-			nodes:   []*Node{},
+			nodes:   []Node{},
 			wantErr: true,
 		},
 		{
 			name: "one node",
 			ch:   StartNewModel(rand.New(rand.NewSource(0))),
-			nodes: []*Node{
+			nodes: []Node{
 				{HostName: "hostName1", HostIP: "1.1.1.1", PodName: "podName1", PodIP: "1.1.1.2"},
 			},
-			want: &Node{HostName: "hostName1", HostIP: "1.1.1.1", PodName: "podName1", PodIP: "1.1.1.2"},
+			want: Node{HostName: "hostName1", HostIP: "1.1.1.1", PodName: "podName1", PodIP: "1.1.1.2"},
 		},
 		{
 			name: "two node",
 			ch:   StartNewModel(rand.New(rand.NewSource(0))),
-			nodes: []*Node{
+			nodes: []Node{
 				{HostName: "hostName1", HostIP: "1.1.1.1", PodName: "podName1", PodIP: "1.1.1.2"},
 				{HostName: "hostName2", HostIP: "2.1.1.1", PodName: "podName2", PodIP: "2.1.1.2"},
 			},
-			want: &Node{HostName: "hostName1", HostIP: "1.1.1.1", PodName: "podName1", PodIP: "1.1.1.2"},
+			want: Node{HostName: "hostName1", HostIP: "1.1.1.1", PodName: "podName1", PodIP: "1.1.1.2"},
 		},
 	}
 	for _, tt := range tests {
@@ -166,11 +196,11 @@ func TestModelAgent_randomNode(t *testing.T) {
 
 			got, err := tt.ch.randomNode()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ModelAgent.randomNode() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ModelAccess.randomNode() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ModelAgent.randomNode() = %v, want %v", got, tt.want)
+				t.Errorf("ModelAccess.randomNode() = %v, want %v", got, tt.want)
 			}
 		})
 	}

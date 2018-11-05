@@ -15,13 +15,13 @@ type model struct {
 	FetchError string
 }
 
-type modelAgent chan<- func(m *model)
+type ModelAccess chan<- func(m *model)
 
-func startNewModel() modelAgent {
+func startNewModel() ModelAccess {
 	c := make(chan func(m *model))
 	m := &model{
 		Status: goldpinger.Status{
-			Participants: []*goldpinger.Node{},
+			Participants: &[]goldpinger.Node{},
 			Worldview:    map[string]map[string]goldpinger.History{},
 		},
 		FetchError: "",

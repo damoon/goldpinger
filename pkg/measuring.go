@@ -15,11 +15,7 @@ func OK(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var netClient = &http.Client{
-	Timeout: time.Second * 10,
-}
-
-func Measuring(ch ModelAgent, hostname string) {
+func Measuring(ch ModelAccess, netClient *http.Client, hostname string) {
 	t := time.NewTicker(1 * time.Second)
 	for range t.C {
 		trg, err := ch.randomNode()
@@ -28,18 +24,18 @@ func Measuring(ch ModelAgent, hostname string) {
 			return
 		}
 		url := fmt.Sprintf("http://%s/ok", trg.PodIP)
-		go fetchHTTP(ch, trg.HostName, hostname, url)
+		go fetchHTTP(ch, netClient, trg.HostName, hostname, url)
 	}
 }
 
-func fetchHTTP(ch ModelAgent, target, source, url string) {
-	d, err := measureHTTP(url)
+func fetchHTTP(ch ModelAccess, netClient *http.Client, target, source, url string) {
+	d, err := measureHTTP(netClient, url)
 	t := time.Now().UnixNano()
 	errMsg := ""
 	if err != nil {
 		errMsg = err.Error()
 	}
-	ch <- func(m *Model) {
+	ch <- func(m Model) {
 		_, ok := m.Status.Worldview[source]
 		if !ok {
 			m.Status.Worldview[source] = map[string]History{}
@@ -53,7 +49,7 @@ func fetchHTTP(ch ModelAgent, target, source, url string) {
 	}
 }
 
-func measureHTTP(url string) (int64, error) {
+func measureHTTP(netClient *http.Client, url string) (int64, error) {
 	before := time.Now().UnixNano()
 	resp, err := netClient.Get(url)
 	d := time.Now().UnixNano() - before

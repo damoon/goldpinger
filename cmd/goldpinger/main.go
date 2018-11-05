@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"math/rand"
+	"net"
 	"net/http"
 	"time"
 
@@ -35,11 +36,21 @@ func main() {
 
 	log.Printf("starting goldpinger")
 	random := rand.New(rand.NewSource(*seed))
+	netTransport := &http.Transport{
+		Dial: (&net.Dialer{
+			Timeout: 5 * time.Second,
+		}).Dial,
+		TLSHandshakeTimeout: 5 * time.Second,
+	}
+	netClient := &http.Client{
+		Timeout:   time.Second * 10,
+		Transport: netTransport,
+	}
 	ch := goldpinger.StartNewModel(random)
 
 	go k8s.PodListSyncing(*kubeconfig, *namespace, ch)
-	go goldpinger.Gossiping(ch)
-	go goldpinger.Measuring(ch, *hostName)
+	go goldpinger.Gossiping(ch, netClient)
+	go goldpinger.Measuring(ch, netClient, *hostName)
 
 	m := http.NewServeMux()
 	m.HandleFunc("/ok", goldpinger.OK)

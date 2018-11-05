@@ -12,7 +12,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-func PodListSyncing(kubeconfig, namespace string, ch goldpinger.ModelAgent) {
+func PodListSyncing(kubeconfig, namespace string, ch goldpinger.ModelAccess) {
 	for {
 		watch, err := newPodWatch(kubeconfig, namespace)
 		if err != nil {
@@ -43,7 +43,7 @@ func newPodWatch(kubeconfig, namespace string) (watch.Interface, error) {
 	return client.CoreV1().Pods(namespace).Watch(meta_v1.ListOptions{})
 }
 
-func updateTargets(ch goldpinger.ModelAgent, e watch.Event) {
+func updateTargets(ch goldpinger.ModelAccess, e watch.Event) {
 	switch e.Type {
 	case watch.Added:
 		fallthrough
@@ -55,7 +55,7 @@ func updateTargets(ch goldpinger.ModelAgent, e watch.Event) {
 			fmt.Printf("failed to cast %+v to a *v1.Pod\n", e.Object)
 			return
 		}
-		ch.Add(&goldpinger.Node{
+		ch.Add(goldpinger.Node{
 			HostIP:   pod.Status.HostIP,
 			HostName: pod.Spec.NodeName,
 			PodIP:    pod.Status.PodIP,

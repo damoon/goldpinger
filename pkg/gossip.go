@@ -10,12 +10,12 @@ import (
 )
 
 // PublishStatus sends the latencies as json encoded to via http.
-func PublishStatus(w http.ResponseWriter, r *http.Request, ch ModelAgent) {
+func PublishStatus(w http.ResponseWriter, r *http.Request, ch ModelAccess) {
 
 	c := make(chan Status)
-	ch <- func(m *Model) {
+	ch <- func(m Model) {
 		defer close(c)
-		cp := deepcopy.Copy((*m).Status)
+		cp := deepcopy.Copy(m.Status)
 		c <- cp.(Status)
 	}
 	status := <-c
@@ -32,7 +32,7 @@ func PublishStatus(w http.ResponseWriter, r *http.Request, ch ModelAgent) {
 	fmt.Fprint(w, string(json))
 }
 
-func Gossiping(ch ModelAgent) {
+func Gossiping(ch ModelAccess, netClient *http.Client) {
 	t := time.NewTicker(2 * time.Second)
 	for range t.C {
 		trg, err := ch.randomNode()
@@ -40,12 +40,12 @@ func Gossiping(ch ModelAgent) {
 			Log("failed to gossip: %v", err)
 			return
 		}
-		go gossip(ch, trg)
+		go gossip(ch, netClient, trg)
 	}
 }
 
-func gossip(ch ModelAgent, t *Node) {
-	resp, err := netClient.Get(fmt.Sprintf("http://%s/status.json", t.PodIP))
+func gossip(ch ModelAccess, netClient *http.Client, n Node) {
+	resp, err := netClient.Get(fmt.Sprintf("http://%s/status.json", n.PodIP))
 	if err != nil {
 		Log("failed to fetch http: %s", err)
 		return
@@ -59,7 +59,7 @@ func gossip(ch ModelAgent, t *Node) {
 		return
 	}
 
-	ch <- func(m *Model) {
+	ch <- func(m Model) {
 		m.Status = MergeStatus(*fetchedStatus, m.Status)
 	}
 }

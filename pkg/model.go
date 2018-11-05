@@ -19,11 +19,11 @@ type Model struct {
 }
 
 type Status struct {
-	Participants []*Node                       `json:"nodes"`
+	Participants *[]Node                       `json:"nodes"`
 	Worldview    map[string]map[string]History `json:"measurements"`
 }
 
-type ModelAgent chan<- func(m *Model)
+type ModelAccess chan<- func(m Model)
 
 type Node struct {
 	HostName string `json:"hostName"`
@@ -40,11 +40,11 @@ type Measurement struct {
 	Error     string `json:"error"`
 }
 
-func StartNewModel(r *rand.Rand) ModelAgent {
-	c := make(chan func(m *Model))
-	m := &Model{
+func StartNewModel(r *rand.Rand) ModelAccess {
+	c := make(chan func(m Model))
+	m := Model{
 		Status: Status{
-			Participants: []*Node{},
+			Participants: &[]Node{},
 			Worldview:    map[string]map[string]History{},
 		},
 		random: r,
@@ -57,37 +57,37 @@ func StartNewModel(r *rand.Rand) ModelAgent {
 	return c
 }
 
-func (ch ModelAgent) randomNode() (*Node, error) {
+func (ch ModelAccess) randomNode() (Node, error) {
 	type response struct {
-		node *Node
+		node Node
 		err  error
 	}
 	c := make(chan response)
-	ch <- func(m *Model) {
+	ch <- func(m Model) {
 		defer close(c)
-		l := len(m.Status.Participants)
+		l := len(*m.Status.Participants)
 		if l == 0 {
-			c <- response{nil, fmt.Errorf("can not select from empty target list")}
+			c <- response{Node{}, fmt.Errorf("can not select from empty target list")}
 			return
 		}
 		i := m.random.Intn(l)
-		n := deepcopy.Copy(m.Status.Participants[i])
-		c <- response{n.(*Node), nil}
+		n := deepcopy.Copy((*m.Status.Participants)[i])
+		c <- response{n.(Node), nil}
 	}
 	n := <-c
 	return n.node, n.err
 }
 
-func (ch ModelAgent) Add(node *Node) {
-	ch <- func(m *Model) {
-		for _, n := range m.Status.Participants {
+func (ch ModelAccess) Add(node Node) {
+	ch <- func(m Model) {
+		for _, n := range *m.Status.Participants {
 			if n.HostName == node.HostName {
 				n.HostIP, n.PodName, n.PodIP = node.HostIP, node.PodName, node.PodIP
 				return
 			}
 		}
-		m.Status.Participants = append(m.Status.Participants, node)
-		sort.Sort(byHostname(m.Status.Participants))
+		*m.Status.Participants = append(*m.Status.Participants, node)
+		sort.Sort(byHostname(*m.Status.Participants))
 	}
 }
 
@@ -98,27 +98,26 @@ func MergeStatus(right, left Status) Status {
 	}
 }
 
-func mergeParticipants(pp ...[]*Node) []*Node {
-	resp := []*Node{}
-
+func mergeParticipants(pp ...*[]Node) *[]Node {
+	resp := []Node{}
 	for _, p := range pp {
-		for _, n := range p {
+		for _, n := range *p {
 			if participantMissing(resp, n) {
 				resp = append(resp, n)
 			}
 		}
 	}
 	sort.Sort(byHostname(resp))
-	return resp
+	return &resp
 }
 
-type byHostname []*Node
+type byHostname []Node
 
 func (a byHostname) Len() int           { return len(a) }
 func (a byHostname) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byHostname) Less(i, j int) bool { return a[i].HostName < a[j].HostName }
 
-func participantMissing(nodes []*Node, node *Node) bool {
+func participantMissing(nodes []Node, node Node) bool {
 	for _, n := range nodes {
 		if n.HostName == node.HostName {
 			return false
@@ -167,7 +166,7 @@ func mergeHistories(right, left History) History {
 			continue
 		}
 
-		if right[i].Timestamp == left[i].Timestamp {
+		if right[i].Timestamp == left[j].Timestamp {
 			slice = append(slice, right[i])
 			i++
 			j++
