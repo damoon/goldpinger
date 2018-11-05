@@ -178,6 +178,15 @@ func TestModelAccess_randomNode(t *testing.T) {
 			want: Node{HostName: "hostName1", HostIP: "1.1.1.1", PodName: "podName1", PodIP: "1.1.1.2"},
 		},
 		{
+			name: "skip empty ip",
+			ch:   StartNewModel(rand.New(rand.NewSource(0))),
+			nodes: []Node{
+				{HostName: "hostName1", HostIP: "1.1.1.1", PodName: "podName1", PodIP: "1.1.1.2"},
+				{HostName: "hostName1", HostIP: "1.1.1.1", PodName: "podName1"},
+			},
+			want: Node{HostName: "hostName1", HostIP: "1.1.1.1", PodName: "podName1", PodIP: "1.1.1.2"},
+		},
+		{
 			name: "two node",
 			ch:   StartNewModel(rand.New(rand.NewSource(0))),
 			nodes: []Node{

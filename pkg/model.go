@@ -79,6 +79,10 @@ func (ch ModelAccess) randomNode() (Node, error) {
 }
 
 func (ch ModelAccess) Add(node Node) {
+	if node.PodIP == "" {
+		return
+	}
+
 	ch <- func(m Model) {
 		for _, n := range *m.Status.Participants {
 			if n.HostName == node.HostName {
