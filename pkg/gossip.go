@@ -47,7 +47,7 @@ func Gossiping(ch ModelAccess, netClient *http.Client) {
 func gossip(ch ModelAccess, netClient *http.Client, n Node) {
 	resp, err := netClient.Get(fmt.Sprintf("http://%s/status.json", n.PodIP))
 	if err != nil {
-		Log("failed to fetch http: %s", err)
+		Log("failed to gossip with %s: %s", n, err)
 		return
 	}
 	defer resp.Body.Close()
