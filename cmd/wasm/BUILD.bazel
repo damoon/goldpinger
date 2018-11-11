@@ -15,6 +15,9 @@ go_binary(
     name = "wasm",
     embed = [":go_default_library"],
     visibility = ["//visibility:public"],
+    goarch = "wasm",
+    goos = "js",
+    pure = "on",
 )
 
 go_test(
