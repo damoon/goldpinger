@@ -27,3 +27,8 @@ Open http://localhost:8001/api/v1/namespaces/goldpinger-development/services/gol
 ## Update dependencies
 
 Follow https://github.com/kubernetes/client-go/blob/master/INSTALL.md#godep to update the kubernetes client
+
+
+## update BUILD files
+
+bazel run //:gazelle

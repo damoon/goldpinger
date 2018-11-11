@@ -1,0 +1,19 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "gossip.go",
+        "measuring.go",
+        "model.go",
+    ],
+    importpath = "github.com/damoon/goldpinger/pkg",
+    visibility = ["//visibility:public"],
+    deps = ["//vendor/github.com/mohae/deepcopy:go_default_library"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["model_test.go"],
+    embed = [":go_default_library"],
+)
