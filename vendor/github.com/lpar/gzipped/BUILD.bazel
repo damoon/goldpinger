@@ -1,0 +1,10 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["fileserver.go"],
+    importmap = "github.com/damoon/goldpinger/vendor/github.com/lpar/gzipped",
+    importpath = "github.com/lpar/gzipped",
+    visibility = ["//visibility:public"],
+    deps = ["//vendor/github.com/golang/gddo/httputil/header:go_default_library"],
+)
