@@ -26,3 +26,13 @@ go_test(
     embed = [":go_default_library"],
     deps = ["//pkg:go_default_library"],
 )
+
+load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
+
+pkg_tar(
+    name = "tar",
+    srcs = [":wasm"],
+    mode = "0o644",
+    package_dir = "/public",
+    visibility = ["//visibility:public"],
+)

@@ -32,3 +32,5 @@ Follow https://github.com/kubernetes/client-go/blob/master/INSTALL.md#godep to u
 ## update BUILD files
 
 bazel run //:gazelle
+
+kubectl -n goldpinger-development create secret docker-registry 31j-pull-secret --docker-server=<your-registry-server> --docker-username=<your-name> --docker-password=<your-pword> --docker-email=<your-email>

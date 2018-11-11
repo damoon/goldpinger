@@ -70,11 +70,11 @@ spec:
       serviceAccountName: default
       containers:
       - name: goldpinger
-        image: ${IMAGE}
+        image: registry.31j.de/goldpinger/goldpinger
         command:
           - sh
           - -c
-          - "/goldpinger -hostName=${DOLLAR}NODE_NAME -namespace=goldpinger-development"
+          - "/app/cmd/goldpinger/image.binary -hostName=$NODE_NAME -namespace=goldpinger-development"
         env:
           - name: NODE_NAME
             valueFrom:
@@ -91,3 +91,5 @@ spec:
         - containerPort: 80
           name: ui
           protocol: TCP
+      imagePullSecrets:
+        - name: 31j-pull-secret
